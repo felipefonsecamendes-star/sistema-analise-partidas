@@ -23,8 +23,14 @@ function hasRiotClientId() {
   return riotConfig.clientId.trim().length > 0;
 }
 
+// Verifica se o Client Secret está configurado
+function hasRiotClientSecret() {
+  return riotConfig.clientSecret.trim().length > 0;
+}
+
 module.exports = {
   ...riotConfig,
   hasRiotApiKey,
-  hasRiotClientId
+  hasRiotClientId,
+  hasRiotClientSecret
 };
