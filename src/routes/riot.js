@@ -24,7 +24,7 @@ const {
 
 // Verifica se a integração Riot está disponível
 router.get('/status', (req, res) => {
-    res.json({
+    return res.json({
         sucesso: true,
         mensagem: 'Integração Riot configurada no GameMetrics.'
     });
@@ -235,14 +235,11 @@ router.get('/minhas-partidas', async (req, res) => {
     }
 });
 
-module.exports = router;
-
 // Retorna as estatísticas do VALORANT do usuário logado
 router.get('/estatisticas', async (req, res) => {
     try {
         const usuarioId = req.session.uid;
 
-        // Busca as partidas importadas do usuário
         const sql = `
             SELECT
                 p.kills,
@@ -260,7 +257,6 @@ router.get('/estatisticas', async (req, res) => {
             [usuarioId]
         );
 
-        // Calcula as estatísticas das partidas
         const estatisticas = calcularEstatisticasValorant(
             partidas
         );
@@ -269,7 +265,6 @@ router.get('/estatisticas', async (req, res) => {
             sucesso: true,
             estatisticas
         });
-
     } catch (erro) {
         console.error(
             'Erro ao calcular estatísticas Riot:',
@@ -282,5 +277,6 @@ router.get('/estatisticas', async (req, res) => {
         });
     }
 });
-// Final da configuração das rotas
+
+// Exporta todas as rotas Riot
 module.exports = router;
