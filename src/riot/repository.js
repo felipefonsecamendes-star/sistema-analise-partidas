@@ -1,8 +1,8 @@
 
  // Busca uma conta Riot pelo PUUID
 async function buscarContaRiot(conexao, puuid) {
-    if (!puuid) {
-        throw new Error('O PUUID é obrigatório.');
+    if (!conexao || !puuid) {
+        throw new Error('Conexão e PUUID são obrigatórios.');
     }
 
     const sql = `
@@ -23,9 +23,50 @@ async function buscarContaRiot(conexao, puuid) {
     return resultados[0] || null;
 }
 
+// Salva ou atualiza uma conta Riot no banco
+async function salvarContaRiot(conexao, conta) {
+    if (
+        !conexao ||
+        !conta ||
+        !conta.usuario_id ||
+        !conta.puuid
+    ) {
+        throw new Error('Dados obrigatórios da conta Riot não informados.');
+    }
+
+    const sql = `
+        INSERT INTO riot_conta (
+            usuario_id,
+            puuid,
+            game_name,
+            tag_line
+        )
+        VALUES (?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            game_name = VALUES(game_name),
+            tag_line = VALUES(tag_line)
+    `;
+
+    const valores = [
+        conta.usuario_id,
+        conta.puuid,
+        conta.game_name ?? null,
+        conta.tag_line ?? null
+    ];
+
+    const [resultado] = await conexao.execute(sql, valores);
+
+    return resultado;
+}
+
 // Salva uma partida do VALORANT no banco de dados
 async function salvarPartidaRiot(conexao, partida) {
-    if (!partida || !partida.riot_conta_id || !partida.match_id) {
+    if (
+        !conexao ||
+        !partida ||
+        !partida.riot_conta_id ||
+        !partida.match_id
+    ) {
         throw new Error('Dados obrigatórios da partida não informados.');
     }
 
@@ -68,5 +109,6 @@ async function salvarPartidaRiot(conexao, partida) {
 
 module.exports = {
     buscarContaRiot,
+    salvarContaRiot,
     salvarPartidaRiot
 };
