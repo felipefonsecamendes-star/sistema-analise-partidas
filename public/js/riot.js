@@ -7,7 +7,7 @@ telas.riot = async () => {
     `;
 
     try {
-        // Busca as estatísticas e as últimas partidas
+        // Busca os dados do usuário logado
         const [respostaStats, respostaPartidas] = await Promise.all([
             f('/api/riot/estatisticas'),
             f('/api/riot/minhas-partidas')
@@ -40,21 +40,87 @@ telas.riot = async () => {
             </div>
         `).join('');
 
-        // Monta a tabela das partidas
-        let historico = '';
+        // Exibe os cartões e os filtros
+        v.innerHTML = `
+            <h2>Estatísticas do VALORANT</h2>
+            <p>Resumo das partidas importadas</p>
 
-        if (partidas.length === 0) {
-            historico = `
-                <p>Nenhuma partida importada ainda.</p>
-            `;
-        } else {
-            const linhas = partidas.map(partida => {
-                const kd = Number(partida.deaths) > 0
-                    ? (
-                        Number(partida.kills) /
-                        Number(partida.deaths)
-                    ).toFixed(2)
-                    : Number(partida.kills).toFixed(2);
+            <div class="cards">
+                ${cards}
+            </div>
+
+            <h3>Últimas partidas</h3>
+
+            <div class="grid">
+                <label>
+                    Filtrar por resultado
+                    <select id="filtroResultadoRiot">
+                        <option value="todas">Todas</option>
+                        <option value="Vitória">Vitórias</option>
+                        <option value="Derrota">Derrotas</option>
+                    </select>
+                </label>
+
+                <label>
+                    Pesquisar mapa
+                    <input
+                        type="text"
+                        id="pesquisaMapaRiot"
+                        placeholder="Ex.: Ascent, Bind, Haven"
+                    >
+                </label>
+            </div>
+
+            <p id="totalFiltradoRiot"></p>
+
+            <div id="historicoRiot"></div>
+        `;
+
+        const filtroResultado = $('#filtroResultadoRiot');
+        const pesquisaMapa = $('#pesquisaMapaRiot');
+        const historicoRiot = $('#historicoRiot');
+        const totalFiltrado = $('#totalFiltradoRiot');
+
+        // Desenha a tabela com as partidas filtradas
+        function atualizarHistorico() {
+            const resultadoSelecionado = filtroResultado.value;
+            const mapaPesquisado = pesquisaMapa.value
+                .trim()
+                .toLowerCase();
+
+            const filtradas = partidas.filter(partida => {
+                const resultado = partida.resultado || 'Indefinido';
+                const mapa = String(partida.mapa || '')
+                    .toLowerCase();
+
+                const correspondeResultado =
+                    resultadoSelecionado === 'todas' ||
+                    resultado === resultadoSelecionado;
+
+                const correspondeMapa =
+                    mapa.includes(mapaPesquisado);
+
+                return correspondeResultado && correspondeMapa;
+            });
+
+            totalFiltrado.textContent =
+                `Partidas encontradas: ${filtradas.length}`;
+
+            if (filtradas.length === 0) {
+                historicoRiot.innerHTML = `
+                    <p>Nenhuma partida encontrada.</p>
+                `;
+                return;
+            }
+
+            const linhas = filtradas.map(partida => {
+                const kills = Number(partida.kills) || 0;
+                const deaths = Number(partida.deaths) || 0;
+                const assists = Number(partida.assists) || 0;
+
+                const kd = deaths > 0
+                    ? (kills / deaths).toFixed(2)
+                    : kills.toFixed(2);
 
                 const resultado = partida.resultado || 'Indefinido';
 
@@ -76,15 +142,15 @@ telas.riot = async () => {
                         <td class="${classeResultado}">
                             ${esc(resultado)}
                         </td>
-                        <td>${esc(partida.kills)}</td>
-                        <td>${esc(partida.deaths)}</td>
-                        <td>${esc(partida.assists)}</td>
-                        <td>${esc(kd)}</td>
+                        <td>${kills}</td>
+                        <td>${deaths}</td>
+                        <td>${assists}</td>
+                        <td>${kd}</td>
                     </tr>
                 `;
             }).join('');
 
-            historico = `
+            historicoRiot.innerHTML = `
                 <div class="wrap">
                     <table>
                         <thead>
@@ -106,18 +172,19 @@ telas.riot = async () => {
             `;
         }
 
-        // Exibe os dados na tela
-        v.innerHTML = `
-            <h2>Estatísticas do VALORANT</h2>
-            <p>Resumo das partidas importadas</p>
+        // Atualiza os resultados quando o usuário altera os filtros
+        filtroResultado.addEventListener(
+            'change',
+            atualizarHistorico
+        );
 
-            <div class="cards">
-                ${cards}
-            </div>
+        pesquisaMapa.addEventListener(
+            'input',
+            atualizarHistorico
+        );
 
-            <h3>Últimas partidas</h3>
-            ${historico}
-        `;
+        // Mostra todas as partidas ao abrir a tela
+        atualizarHistorico();
 
     } catch (erro) {
         console.error(
