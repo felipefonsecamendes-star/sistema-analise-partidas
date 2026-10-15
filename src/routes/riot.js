@@ -18,6 +18,10 @@ const {
     importarPartidaValorant
 } = require('../riot/integration');
 
+const {
+    calcularEstatisticasValorant
+} = require('../riot/stats');
+
 // Verifica se a integração Riot está disponível
 router.get('/status', (req, res) => {
     res.json({
@@ -231,4 +235,52 @@ router.get('/minhas-partidas', async (req, res) => {
     }
 });
 
+module.exports = router;
+
+// Retorna as estatísticas do VALORANT do usuário logado
+router.get('/estatisticas', async (req, res) => {
+    try {
+        const usuarioId = req.session.uid;
+
+        // Busca as partidas importadas do usuário
+        const sql = `
+            SELECT
+                p.kills,
+                p.deaths,
+                p.assists,
+                p.resultado
+            FROM riot_partida AS p
+            INNER JOIN riot_conta AS c
+                ON p.riot_conta_id = c.id
+            WHERE c.usuario_id = ?
+        `;
+
+        const [partidas] = await db.execute(
+            sql,
+            [usuarioId]
+        );
+
+        // Calcula as estatísticas das partidas
+        const estatisticas = calcularEstatisticasValorant(
+            partidas
+        );
+
+        return res.json({
+            sucesso: true,
+            estatisticas
+        });
+
+    } catch (erro) {
+        console.error(
+            'Erro ao calcular estatísticas Riot:',
+            erro.message
+        );
+
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: 'Não foi possível calcular as estatísticas.'
+        });
+    }
+});
+// Final da configuração das rotas
 module.exports = router;
