@@ -11,6 +11,7 @@ app.use(session({
 }));
 app.use('/api', require('./src/routes/usuarios'));
 app.use('/api/jogos', auth, require('./src/routes/jogos'));
+app.use('/api/riot', auth, require('./src/routes/riot'));
 app.use('/api/dashboard', auth, require('./src/routes/dashboard'));
 app.use('/api/demo', auth, require('./src/routes/analisarDemo'));
 app.use('/api/partidas/:id/demo', auth, require('./src/routes/demos'));
