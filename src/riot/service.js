@@ -11,7 +11,6 @@ async function consultarApiRiot(rota, tipo = 'regional') {
         throw new Error('A rota da API Riot é inválida.');
     }
 
-    // Define o servidor correto para a consulta
     const servidor = tipo === 'plataforma'
         ? config.platform
         : config.regionalRouting;
@@ -34,7 +33,7 @@ async function consultarApiRiot(rota, tipo = 'regional') {
     return await resposta.json();
 }
 
-// Busca informações de uma conta Riot
+// Busca uma conta Riot pelo nome e tag
 async function buscarContaPorRiotId(gameName, tagLine) {
     if (!gameName || !tagLine) {
         throw new Error('Nome e tag da Riot são obrigatórios.');
@@ -48,15 +47,27 @@ async function buscarContaPorRiotId(gameName, tagLine) {
     return await consultarApiRiot(rota);
 }
 
-// Busca informações de uma partida do VALORANT
+// Busca uma partida pelo ID
 async function buscarPartidaValorant(matchId) {
     if (!matchId) {
         throw new Error('O ID da partida é obrigatório.');
     }
 
     const id = encodeURIComponent(matchId);
-
     const rota = `/val/match/v1/matches/${id}`;
+
+    return await consultarApiRiot(rota);
+}
+
+// Busca os IDs das últimas partidas de um jogador
+async function buscarHistoricoValorant(puuid) {
+    if (!puuid) {
+        throw new Error('O PUUID do jogador é obrigatório.');
+    }
+
+    const id = encodeURIComponent(puuid);
+
+    const rota = `/val/match/v1/matchlists/by-puuid/${id}`;
 
     return await consultarApiRiot(rota);
 }
@@ -64,5 +75,6 @@ async function buscarPartidaValorant(matchId) {
 module.exports = {
     consultarApiRiot,
     buscarContaPorRiotId,
-    buscarPartidaValorant
+    buscarPartidaValorant,
+    buscarHistoricoValorant
 };
