@@ -28,9 +28,15 @@ function hasRiotClientSecret() {
   return riotConfig.clientSecret.trim().length > 0;
 }
 
+// Verifica se o Redirect URI está configurado
+function hasRiotRedirectUri() {
+  return riotConfig.redirectUri.trim().length > 0;
+}
+
 module.exports = {
   ...riotConfig,
   hasRiotApiKey,
   hasRiotClientId,
-  hasRiotClientSecret
+  hasRiotClientSecret,
+  hasRiotRedirectUri
 };
