@@ -36,21 +36,21 @@ CREATE TABLE IF NOT EXISTS riot_partida (
 
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
+    -- Evita partidas duplicadas para a mesma conta
+    UNIQUE KEY idx_riot_partida_conta_match (
+        riot_conta_id,
+        match_id
+    ),
+
+    -- Melhora a busca pelo histórico de partidas
+    INDEX idx_riot_partida_data (
+        riot_conta_id,
+        criado_em
+    ),
+
     -- Relacionamento com a conta Riot
     CONSTRAINT fk_partida_riot_conta
         FOREIGN KEY (riot_conta_id)
         REFERENCES riot_conta(id)
         ON DELETE CASCADE
 );
-
--- Índices para melhorar as consultas Riot
-
--- Evita importar a mesma partida duas vezes
--- para a mesma conta
-CREATE UNIQUE INDEX idx_riot_partida_conta_match
-ON riot_partida (riot_conta_id, match_id);
-
--- Melhora a busca pelo histórico de partidas
-CREATE INDEX idx_riot_partida_data
-ON riot_partida (riot_conta_id, criado_em);
-
