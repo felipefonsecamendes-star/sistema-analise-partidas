@@ -9,7 +9,13 @@ CREATE TABLE IF NOT EXISTS riot_conta (
     puuid VARCHAR(100) NOT NULL UNIQUE,
     game_name VARCHAR(100),
     tag_line VARCHAR(10),
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Relacionamento com usuário do GameMetrics
+    CONSTRAINT fk_riot_usuario
+        FOREIGN KEY (usuario_id)
+        REFERENCES usuario(id_usuario)
+        ON DELETE CASCADE
 );
 
 -- Tabela para armazenar partidas do VALORANT
@@ -28,5 +34,11 @@ CREATE TABLE IF NOT EXISTS riot_partida (
     resultado VARCHAR(20),
     pontuacao INT NOT NULL DEFAULT 0,
 
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Relacionamento com a conta Riot
+    CONSTRAINT fk_partida_riot_conta
+        FOREIGN KEY (riot_conta_id)
+        REFERENCES riot_conta(id)
+        ON DELETE CASCADE
 );
