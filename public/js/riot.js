@@ -1,32 +1,26 @@
 
- // Tela de estatísticas do VALORANT
+// Tela de estatísticas e histórico do VALORANT
 telas.riot = async () => {
-    // Mostra uma mensagem enquanto carrega
     v.innerHTML = `
-        <h2>Estatísticas do VALORANT</h2>
-        <p>Carregando estatísticas...</p>
+        <h2>VALORANT</h2>
+        <p>Carregando estatísticas e partidas...</p>
     `;
 
     try {
-        // Consulta a API do GameMetrics
-        const resposta = await f('/api/riot/estatisticas');
+        // Busca as estatísticas e as últimas partidas
+        const [respostaStats, respostaPartidas] = await Promise.all([
+            f('/api/riot/estatisticas'),
+            f('/api/riot/minhas-partidas')
+        ]);
 
-        if (!resposta.sucesso) {
-            throw new Error('Falha ao carregar estatísticas.');
+        if (!respostaStats.sucesso || !respostaPartidas.sucesso) {
+            throw new Error('Não foi possível carregar os dados.');
         }
 
-        const stats = resposta.estatisticas;
+        const stats = respostaStats.estatisticas;
+        const partidas = respostaPartidas.partidas;
 
-        if (stats.totalPartidas === 0) {
-            v.innerHTML = `
-                <h2>Estatísticas do VALORANT</h2>
-                <p>Nenhuma partida importada ainda.</p>
-                <p>Importe suas partidas para visualizar as estatísticas.</p>
-            `;
-            return;
-        }
-
-        // Organiza os dados que aparecerão na tela
+        // Prepara os cartões de estatísticas
         const itens = [
             ['Partidas', stats.totalPartidas],
             ['Vitórias', stats.vitorias],
@@ -39,7 +33,6 @@ telas.riot = async () => {
             ['Taxa de vitória', stats.taxaVitoria + '%']
         ];
 
-        // Monta os cartões de estatísticas
         const cards = itens.map(([nome, valor]) => `
             <div class="card">
                 <small>${nome}</small>
@@ -47,25 +40,95 @@ telas.riot = async () => {
             </div>
         `).join('');
 
-        // Exibe as estatísticas
+        // Monta a tabela das partidas
+        let historico = '';
+
+        if (partidas.length === 0) {
+            historico = `
+                <p>Nenhuma partida importada ainda.</p>
+            `;
+        } else {
+            const linhas = partidas.map(partida => {
+                const kd = Number(partida.deaths) > 0
+                    ? (
+                        Number(partida.kills) /
+                        Number(partida.deaths)
+                    ).toFixed(2)
+                    : Number(partida.kills).toFixed(2);
+
+                const resultado = partida.resultado || 'Indefinido';
+
+                const classeResultado = resultado === 'Vitória'
+                    ? 'ok'
+                    : resultado === 'Derrota'
+                        ? 'erro'
+                        : '';
+
+                const data = partida.criado_em
+                    ? new Date(partida.criado_em)
+                        .toLocaleDateString('pt-BR')
+                    : '-';
+
+                return `
+                    <tr>
+                        <td>${esc(data)}</td>
+                        <td>${esc(partida.mapa || '-')}</td>
+                        <td class="${classeResultado}">
+                            ${esc(resultado)}
+                        </td>
+                        <td>${esc(partida.kills)}</td>
+                        <td>${esc(partida.deaths)}</td>
+                        <td>${esc(partida.assists)}</td>
+                        <td>${esc(kd)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            historico = `
+                <div class="wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Mapa</th>
+                                <th>Resultado</th>
+                                <th>Kills</th>
+                                <th>Mortes</th>
+                                <th>Assistências</th>
+                                <th>K/D</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${linhas}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // Exibe os dados na tela
         v.innerHTML = `
             <h2>Estatísticas do VALORANT</h2>
             <p>Resumo das partidas importadas</p>
+
             <div class="cards">
                 ${cards}
             </div>
+
+            <h3>Últimas partidas</h3>
+            ${historico}
         `;
 
     } catch (erro) {
         console.error(
-            'Erro ao carregar estatísticas VALORANT:',
+            'Erro ao carregar dados do VALORANT:',
             erro
         );
 
         v.innerHTML = `
-            <h2>Estatísticas do VALORANT</h2>
+            <h2>VALORANT</h2>
             <p class="erro">
-                Não foi possível carregar as estatísticas.
+                Não foi possível carregar os dados do VALORANT.
             </p>
         `;
     }
