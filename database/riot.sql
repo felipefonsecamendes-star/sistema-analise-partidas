@@ -23,5 +23,10 @@ CREATE TABLE IF NOT EXISTS riot_partida (
     deaths INT NOT NULL DEFAULT 0,
     assists INT NOT NULL DEFAULT 0,
 
+    -- Informações da partida
+    mapa VARCHAR(100),
+    resultado VARCHAR(20),
+    pontuacao INT NOT NULL DEFAULT 0,
+
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
