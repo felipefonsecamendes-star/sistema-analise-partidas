@@ -14,6 +14,10 @@ const {
     salvarContaRiot
 } = require('../riot/repository');
 
+const {
+    importarPartidaValorant
+} = require('../riot/integration');
+
 // Verifica se a integração Riot está disponível
 router.get('/status', (req, res) => {
     res.json({
@@ -29,14 +33,14 @@ router.get('/conta/:nome/:tag', async (req, res) => {
 
         const conta = await buscarContaPorRiotId(nome, tag);
 
-        res.json({
+        return res.json({
             sucesso: true,
             conta
         });
     } catch (erro) {
         console.error('Erro ao buscar conta Riot:', erro.message);
 
-        res.status(502).json({
+        return res.status(502).json({
             sucesso: false,
             mensagem: 'Não foi possível consultar a conta Riot.'
         });
@@ -50,14 +54,14 @@ router.get('/historico/:puuid', async (req, res) => {
 
         const historico = await buscarHistoricoValorant(puuid);
 
-        res.json({
+        return res.json({
             sucesso: true,
             historico
         });
     } catch (erro) {
         console.error('Erro ao buscar histórico Riot:', erro.message);
 
-        res.status(502).json({
+        return res.status(502).json({
             sucesso: false,
             mensagem: 'Não foi possível consultar o histórico de partidas.'
         });
@@ -67,7 +71,7 @@ router.get('/historico/:puuid', async (req, res) => {
 // Vincula uma conta Riot ao usuário logado
 router.post('/vincular', async (req, res) => {
     try {
-        const { nome, tag } = req.body;
+        const { nome, tag } = req.body || {};
 
         if (
             typeof nome !== 'string' ||
@@ -81,7 +85,6 @@ router.post('/vincular', async (req, res) => {
             });
         }
 
-        // Consulta a conta na API Riot
         const contaRiot = await buscarContaPorRiotId(
             nome.trim(),
             tag.trim()
@@ -94,7 +97,6 @@ router.post('/vincular', async (req, res) => {
             });
         }
 
-        // Verifica se a conta já está vinculada
         const contaExistente = await buscarContaRiot(
             db,
             contaRiot.puuid
@@ -107,7 +109,6 @@ router.post('/vincular', async (req, res) => {
             });
         }
 
-        // Salva a conta no banco de dados
         await salvarContaRiot(db, {
             usuario_id: req.session.uid,
             puuid: contaRiot.puuid,
@@ -115,25 +116,21 @@ router.post('/vincular', async (req, res) => {
             tag_line: contaRiot.tagLine
         });
 
-        res.status(201).json({
+        return res.status(201).json({
             sucesso: true,
             mensagem: 'Conta Riot vinculada com sucesso.'
         });
     } catch (erro) {
         console.error('Erro ao vincular conta Riot:', erro.message);
 
-        res.status(500).json({
+        return res.status(500).json({
             sucesso: false,
             mensagem: 'Não foi possível vincular a conta Riot.'
         });
     }
 });
 
-const {
-    importarPartidaValorant
-} = require('../riot/integration');
-
-// Importa uma partida do VALORANT para o GameMetrics
+// Importa uma partida do VALORANT
 router.post('/importar-partida', async (req, res) => {
     try {
         const usuarioId = req.session.uid;
@@ -146,7 +143,6 @@ router.post('/importar-partida', async (req, res) => {
             });
         }
 
-        // Busca a conta Riot vinculada ao usuário
         const [contas] = await db.execute(
             `SELECT id, puuid
              FROM riot_conta
@@ -164,7 +160,6 @@ router.post('/importar-partida', async (req, res) => {
 
         const conta = contas[0];
 
-        // Consulta, processa e salva a partida
         const partida = await importarPartidaValorant(
             db,
             matchId.trim(),
@@ -177,16 +172,61 @@ router.post('/importar-partida', async (req, res) => {
             mensagem: 'Partida importada com sucesso.',
             partida
         });
+    } catch (erro) {
+        console.error('Erro ao importar partida:', erro.message);
 
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: 'Não foi possível importar a partida.'
+        });
+    }
+});
+
+// Lista as partidas importadas do usuário logado
+router.get('/minhas-partidas', async (req, res) => {
+    try {
+        const usuarioId = req.session.uid;
+
+        const sql = `
+            SELECT
+                p.id,
+                p.match_id,
+                p.kills,
+                p.deaths,
+                p.assists,
+                p.mapa,
+                p.resultado,
+                p.pontuacao,
+                p.criado_em,
+                c.game_name,
+                c.tag_line
+            FROM riot_partida AS p
+            INNER JOIN riot_conta AS c
+                ON p.riot_conta_id = c.id
+            WHERE c.usuario_id = ?
+            ORDER BY p.criado_em DESC, p.id DESC
+            LIMIT 50
+        `;
+
+        const [partidas] = await db.execute(
+            sql,
+            [usuarioId]
+        );
+
+        return res.json({
+            sucesso: true,
+            total: partidas.length,
+            partidas
+        });
     } catch (erro) {
         console.error(
-            'Erro ao importar partida:',
+            'Erro ao listar partidas Riot:',
             erro.message
         );
 
         return res.status(500).json({
             sucesso: false,
-            mensagem: 'Não foi possível importar a partida.'
+            mensagem: 'Não foi possível listar as partidas.'
         });
     }
 });
