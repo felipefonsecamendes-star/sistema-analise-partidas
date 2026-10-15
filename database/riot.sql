@@ -17,5 +17,11 @@ CREATE TABLE IF NOT EXISTS riot_partida (
     id INT AUTO_INCREMENT PRIMARY KEY,
     riot_conta_id INT NOT NULL,
     match_id VARCHAR(100) NOT NULL,
+
+    -- Estatísticas do jogador
+    kills INT NOT NULL DEFAULT 0,
+    deaths INT NOT NULL DEFAULT 0,
+    assists INT NOT NULL DEFAULT 0,
+
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
