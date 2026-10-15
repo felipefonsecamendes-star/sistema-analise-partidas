@@ -13,12 +13,18 @@ const riotConfig = {
   redirectUri: process.env.RIOT_REDIRECT_URI || ''
 };
 
-// Verifica se existe uma chave configurada
+// Verifica se existe uma chave da API
 function hasRiotApiKey() {
   return riotConfig.apiKey.trim().length > 0;
 }
 
+// Verifica se o Client ID está configurado
+function hasRiotClientId() {
+  return riotConfig.clientId.trim().length > 0;
+}
+
 module.exports = {
   ...riotConfig,
-  hasRiotApiKey
+  hasRiotApiKey,
+  hasRiotClientId
 };
