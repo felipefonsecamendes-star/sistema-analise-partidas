@@ -17,6 +17,7 @@ async function buscarContaPorRiotId(gameName, tagLine) {
 
     const rota = `/riot/account/v1/accounts/by-riot-id/${nome}/${tag}`;
 
+    // A API de contas utiliza roteamento regional
     return await consultarApiRiot(rota, 'regional');
 }
 
@@ -30,7 +31,8 @@ async function buscarPartidaValorant(matchId) {
 
     const rota = `/val/match/v1/matches/${id}`;
 
-    return await consultarApiRiot(rota, 'regional');
+    // A API de partidas utiliza roteamento de plataforma
+    return await consultarApiRiot(rota, 'plataforma');
 }
 
 // Busca o histórico de partidas de um jogador
@@ -43,7 +45,8 @@ async function buscarHistoricoValorant(puuid) {
 
     const rota = `/val/match/v1/matchlists/by-puuid/${id}`;
 
-    return await consultarApiRiot(rota, 'regional');
+    // O histórico utiliza roteamento de plataforma
+    return await consultarApiRiot(rota, 'plataforma');
 }
 
 module.exports = {
