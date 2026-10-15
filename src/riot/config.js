@@ -33,10 +33,37 @@ function hasRiotRedirectUri() {
   return riotConfig.redirectUri.trim().length > 0;
 }
 
+// Verifica as configurações necessárias
+function validateRiotConfig() {
+  const missing = [];
+
+  if (!hasRiotApiKey()) {
+    missing.push('RIOT_API_KEY');
+  }
+
+  if (!hasRiotClientId()) {
+    missing.push('RIOT_CLIENT_ID');
+  }
+
+  if (!hasRiotClientSecret()) {
+    missing.push('RIOT_CLIENT_SECRET');
+  }
+
+  if (!hasRiotRedirectUri()) {
+    missing.push('RIOT_REDIRECT_URI');
+  }
+
+  return {
+    valid: missing.length === 0,
+    missing
+  };
+}
+
 module.exports = {
   ...riotConfig,
   hasRiotApiKey,
   hasRiotClientId,
   hasRiotClientSecret,
-  hasRiotRedirectUri
+  hasRiotRedirectUri,
+  validateRiotConfig
 };
