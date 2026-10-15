@@ -129,4 +129,66 @@ router.post('/vincular', async (req, res) => {
     }
 });
 
+const {
+    importarPartidaValorant
+} = require('../riot/integration');
+
+// Importa uma partida do VALORANT para o GameMetrics
+router.post('/importar-partida', async (req, res) => {
+    try {
+        const usuarioId = req.session.uid;
+        const { matchId } = req.body || {};
+
+        if (typeof matchId !== 'string' || !matchId.trim()) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: 'Informe o ID da partida.'
+            });
+        }
+
+        // Busca a conta Riot vinculada ao usuário
+        const [contas] = await db.execute(
+            `SELECT id, puuid
+             FROM riot_conta
+             WHERE usuario_id = ?
+             LIMIT 1`,
+            [usuarioId]
+        );
+
+        if (contas.length === 0) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: 'Vincule sua conta Riot primeiro.'
+            });
+        }
+
+        const conta = contas[0];
+
+        // Consulta, processa e salva a partida
+        const partida = await importarPartidaValorant(
+            db,
+            matchId.trim(),
+            conta.puuid,
+            conta.id
+        );
+
+        return res.status(201).json({
+            sucesso: true,
+            mensagem: 'Partida importada com sucesso.',
+            partida
+        });
+
+    } catch (erro) {
+        console.error(
+            'Erro ao importar partida:',
+            erro.message
+        );
+
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: 'Não foi possível importar a partida.'
+        });
+    }
+});
+
 module.exports = router;
