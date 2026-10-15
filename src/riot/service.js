@@ -1,36 +1,9 @@
 
-const config = require('./config');
+const { riotRequest } = require('./client');
 
 // Faz uma consulta GET à API da Riot Games
 async function consultarApiRiot(rota, tipo = 'regional') {
-    if (!config.hasRiotApiKey()) {
-        throw new Error('A chave da API Riot não foi configurada.');
-    }
-
-    if (!rota || !rota.startsWith('/')) {
-        throw new Error('A rota da API Riot é inválida.');
-    }
-
-    const servidor = tipo === 'plataforma'
-        ? config.platform
-        : config.regionalRouting;
-
-    const url = `https://${servidor}.api.riotgames.com${rota}`;
-
-    const resposta = await fetch(url, {
-        method: 'GET',
-        headers: {
-            'X-Riot-Token': config.apiKey
-        }
-    });
-
-    if (!resposta.ok) {
-        throw new Error(
-            `Erro ao consultar a API Riot: ${resposta.status}`
-        );
-    }
-
-    return await resposta.json();
+    return await riotRequest(rota, tipo);
 }
 
 // Busca uma conta Riot pelo nome e tag
@@ -44,22 +17,23 @@ async function buscarContaPorRiotId(gameName, tagLine) {
 
     const rota = `/riot/account/v1/accounts/by-riot-id/${nome}/${tag}`;
 
-    return await consultarApiRiot(rota);
+    return await consultarApiRiot(rota, 'regional');
 }
 
-// Busca uma partida pelo ID
+// Busca uma partida do VALORANT pelo ID
 async function buscarPartidaValorant(matchId) {
     if (!matchId) {
         throw new Error('O ID da partida é obrigatório.');
     }
 
     const id = encodeURIComponent(matchId);
+
     const rota = `/val/match/v1/matches/${id}`;
 
-    return await consultarApiRiot(rota);
+    return await consultarApiRiot(rota, 'regional');
 }
 
-// Busca os IDs das últimas partidas de um jogador
+// Busca o histórico de partidas de um jogador
 async function buscarHistoricoValorant(puuid) {
     if (!puuid) {
         throw new Error('O PUUID do jogador é obrigatório.');
@@ -69,7 +43,7 @@ async function buscarHistoricoValorant(puuid) {
 
     const rota = `/val/match/v1/matchlists/by-puuid/${id}`;
 
-    return await consultarApiRiot(rota);
+    return await consultarApiRiot(rota, 'regional');
 }
 
 module.exports = {
