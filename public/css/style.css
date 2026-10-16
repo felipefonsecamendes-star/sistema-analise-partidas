@@ -1,18 +1,51 @@
-:root{--bg:#0b0f1a;--card:#141b2d;--azul:#2f7bff;--txt:#e8ecf5;--mut:#8b96b0}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--txt)}
-nav{display:flex;gap:8px;padding:12px 20px;background:var(--card);flex-wrap:wrap;align-items:center}
-nav b{margin-right:auto;color:var(--azul)}
-button,.btn{background:var(--azul);color:#fff;border:0;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:14px}
-button.sec{background:#26304a}button.red{background:#d33}
-main{max-width:1000px;margin:20px auto;padding:0 16px}
-.box{max-width:380px;margin:60px auto;background:var(--card);padding:24px;border-radius:12px}
-label{display:block;margin:10px 0;font-size:13px;color:var(--mut)}
-input,select{width:100%;padding:9px;margin-top:4px;border-radius:8px;border:1px solid #26304a;background:#0b0f1a;color:var(--txt)}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
-.card{background:var(--card);padding:16px;border-radius:12px}.card small{color:var(--mut);display:block}.card b{font-size:24px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 14px}
-table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden}
-td,th{padding:9px;text-align:left;font-size:13px;border-bottom:1px solid #26304a}
-.erro{color:#ff7b7b;min-height:20px}.ok{color:#5be08a}
-.wrap{overflow-x:auto}canvas{background:var(--card);border-radius:12px;padding:12px}
-@media(max-width:600px){nav button{flex:1}}
+:root{--fundo:#0c1220;--lateral:#0a0f1b;--painel:#111a2d;--linha:#22304a;--txt:#e7ebf3;--mut:#8b97ad;--azul:#2f7bff;--azul2:#6ea8ff;--ouro:#fcab19;--rubro:#e75c6b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fundo);color:var(--txt);font:15px/1.5 'IBM Plex Sans',system-ui,sans-serif}
+:focus-visible{outline:2px solid var(--ouro);outline-offset:2px}
+h2.tit,.box h3,.hero h1,.marca span,.resumo b,.destaque b{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700}
+h2.tit{margin:0 0 22px;font-size:40px;line-height:1}h3.sub{margin:30px 0 12px;font-size:17px;font-weight:600}
+.marca{display:flex;align-items:center;gap:10px}.marca img{width:34px;height:34px}.marca span{font-size:24px;letter-spacing:.01em}
+body.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+.lateral{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:26px 0;background:var(--lateral);border-right:1px solid var(--linha)}
+.lateral .marca{padding:0 22px 30px}
+.lateral nav{display:flex;flex-direction:column}
+.lateral button{display:block;width:100%;text-align:left;padding:11px 22px;background:none;border:0;border-left:3px solid transparent;border-radius:0;color:var(--mut);font:500 15px 'IBM Plex Sans',sans-serif;cursor:pointer}
+.lateral button:hover{color:var(--txt)}.lateral button.on{color:var(--txt);background:var(--painel);border-left-color:var(--azul)}
+.lateral .sair{margin-top:auto}
+main#view{padding:36px 44px;max-width:1080px;width:100%}
+button{background:var(--azul);color:#fff;border:0;padding:11px 20px;border-radius:3px;font:600 15px 'IBM Plex Sans',sans-serif;cursor:pointer}
+button:hover{background:#1f63d9}button:disabled{opacity:.5;cursor:wait}button.sec{background:#1b2740}button.red{background:#b5384a}
+label{display:block;margin:14px 0;font-size:13px;color:var(--mut)}
+input,select{width:100%;padding:10px 12px;margin-top:6px;border-radius:3px;border:1px solid var(--linha);background:#0a101d;color:var(--txt);font:15px 'IBM Plex Sans',sans-serif}
+input:focus,select:focus{outline:0;border-color:var(--azul)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0 18px}
+.resumo{display:grid;grid-template-columns:1.5fr repeat(5,1fr);border:1px solid var(--linha);background:var(--painel)}
+.resumo>div{padding:18px 20px;border-left:1px solid var(--linha)}.resumo>div:first-child{border-left:0}
+.rot{display:block;color:var(--mut);font-size:13px}.resumo b{display:block;font-size:34px;line-height:1.1;font-variant-numeric:tabular-nums}.destaque b{font-size:76px;line-height:1}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--linha);border:1px solid var(--linha);margin:14px 0 22px}
+.cards.tres{grid-template-columns:repeat(3,1fr)}
+.card{background:var(--painel);padding:14px 16px}.card small{display:block;color:var(--mut);font-size:13px}.card b{font:700 26px 'Barlow Condensed',sans-serif;font-variant-numeric:tabular-nums}
+.painel{border:1px solid var(--linha);background:var(--painel);padding:16px}
+.drop{padding:14px;border:1px dashed #3a4c70;border-radius:3px}
+.jogos{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 10px}
+.jogo{display:grid;grid-template-columns:52px 1fr;gap:0 14px;align-items:center;text-align:left;padding:12px;background:var(--painel);border:2px solid var(--linha);border-radius:3px;color:var(--txt)}
+.jogo:hover{background:var(--painel)}.jogo img{grid-row:span 2;width:52px;height:52px;border-radius:2px}.jogo b{font-size:16px}.jogo small{color:var(--mut);font-weight:400}
+.jogo.on.cs{border-color:var(--ouro)}.jogo.on.val{border-color:var(--rubro)}
+.wrap{overflow-x:auto;margin-top:14px;border:1px solid var(--linha);background:var(--painel)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{color:var(--mut);font-weight:500}td,th{padding:11px 14px;text-align:left;font-size:14px;border-bottom:1px solid var(--linha)}tr:last-child td{border-bottom:0}tr:hover td{background:rgba(255,255,255,.03)}
+.ico{width:20px;height:20px;border-radius:2px;vertical-align:middle;margin-right:8px}
+.badge{font-weight:600}.badge::before{content:"";display:inline-block;width:8px;height:8px;margin-right:7px;background:currentColor}
+.badge.v{color:var(--azul2)}.badge.d{color:var(--rubro)}.badge.e{color:var(--mut)}
+.erro{color:#ff8593;min-height:20px}.ok{color:#6ea8ff}
+body.auth{display:grid;grid-template-columns:1.25fr 1fr;min-height:100vh}
+.capa{display:flex;flex-direction:column;justify-content:space-between;gap:36px;padding:40px 56px;background:var(--lateral);border-right:1px solid var(--linha)}
+.hero h1{margin:0 0 14px;font-size:clamp(46px,6vw,88px);line-height:.95}.hero p{margin:0;max-width:46ch;color:var(--mut)}
+.placar{max-width:480px;margin-top:30px;border:1px solid var(--linha);background:var(--painel)}
+.placar td:first-child{box-shadow:inset 3px 0 0 transparent}.placar tr.eu td:first-child{box-shadow:inset 3px 0 0 var(--azul)}
+.placar caption{caption-side:bottom;padding:8px 14px;color:var(--mut);font-size:12px;text-align:left}
+.suportados{display:flex;gap:26px;flex-wrap:wrap;color:var(--mut);font-size:14px}.suportados img{width:26px;height:26px;border-radius:2px;vertical-align:middle;margin-right:8px}
+.entrada{display:grid;place-items:center;padding:40px}.box{width:100%;max-width:360px}.box h3{margin:0 0 8px;font-size:40px;line-height:1}
+@media(max-width:900px){.resumo{grid-template-columns:repeat(3,1fr)}.destaque{grid-column:1/-1}.resumo>div{border-top:1px solid var(--linha)}}
+@media(max-width:760px){body.app{grid-template-columns:1fr}.lateral{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px 0}.lateral .marca{padding:0 16px}.lateral nav{flex-direction:row;flex-wrap:wrap}.lateral button{width:auto;padding:9px 12px;border-left:0;border-bottom:3px solid transparent}.lateral button.on{border-bottom-color:var(--azul)}.lateral .sair{margin:0 0 0 auto}main#view{padding:22px 16px}.jogos{grid-template-columns:1fr}
+body.auth{grid-template-columns:1fr}.capa{padding:28px 20px;border-right:0}}
