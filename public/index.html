@@ -1,17 +1,28 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GameMetrics - Login</title><link rel="stylesheet" href="css/style.css"></head>
-<body><div class="box">
-<h2>GameMetrics</h2>
+<title>GameMetrics</title><link rel="icon" type="image/svg+xml" href="img/logo.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/style.css"></head>
+<body class="auth"><section class="capa">
+<div class="marca"><img src="img/logo.svg" alt=""><span>GameMetrics</span></div>
+<div class="hero"><h1>Seu K/D, partida por partida.</h1>
+<p>Envie a demo do CS2 ou digite os números da partida. O sistema calcula precisão e headshots e guarda tudo no seu histórico.</p>
+<table class="placar"><tr><th>Jogador</th><th>K</th><th>D</th><th>A</th><th>HS%</th></tr>
+<tr class="eu"><td>Raposa</td><td>24</td><td>14</td><td>6</td><td>48%</td></tr>
+<tr><td>Tigrão</td><td>19</td><td>17</td><td>4</td><td>31%</td></tr>
+<tr><td>Nimbus</td><td>15</td><td>18</td><td>9</td><td>40%</td></tr>
+<tr><td>Zeca</td><td>11</td><td>20</td><td>3</td><td>27%</td></tr>
+<caption>Exemplo do tipo de placar que você terá de cada partida.</caption></table></div>
+<div class="suportados"><span><img src="img/cs2.png" alt="">Counter-Strike 2, com demo</span><span><img src="img/valorant.png" alt="">Valorant, cadastro manual</span></div>
+</section>
+<main class="entrada"><div class="box">
 <form id="fl"><h3>Entrar</h3>
 <label>E-mail<input id="email" type="email" required></label>
 <label>Senha<input id="senha" type="password" required></label>
 <button>Entrar</button> <button type="button" class="sec" id="tg">Criar conta</button></form>
-<form id="fc" hidden><h3>Cadastro</h3>
+<form id="fc" hidden><h3>Criar conta</h3>
 <label>Nome<input id="cn" required></label>
 <label>E-mail<input id="ce" type="email" required></label>
 <label>Senha<input id="cs" type="password" minlength="6" required></label>
 <label>Confirmar senha<input id="cc" type="password" required></label>
 <button>Cadastrar</button> <button type="button" class="sec" id="tv">Voltar</button></form>
-<p id="msg" class="erro"></p></div>
+<p id="msg" class="erro"></p></div></main>
 <script src="js/login.js"></script></body></html>
