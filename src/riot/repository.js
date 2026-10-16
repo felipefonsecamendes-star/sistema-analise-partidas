@@ -1,5 +1,5 @@
 
- // Busca uma conta Riot pelo PUUID
+// Busca uma conta Riot pelo PUUID
 async function buscarContaRiot(conexao, puuid) {
     if (!conexao || !puuid) {
         throw new Error('Conexão e PUUID são obrigatórios.');
@@ -31,7 +31,9 @@ async function salvarContaRiot(conexao, conta) {
         !conta.usuario_id ||
         !conta.puuid
     ) {
-        throw new Error('Dados obrigatórios da conta Riot não informados.');
+        throw new Error(
+            'Dados obrigatórios da conta Riot não informados.'
+        );
     }
 
     const sql = `
@@ -67,9 +69,13 @@ async function salvarPartidaRiot(conexao, partida) {
         !partida.riot_conta_id ||
         !partida.match_id
     ) {
-        throw new Error('Dados obrigatórios da partida não informados.');
+        throw new Error(
+            'Dados obrigatórios da partida não informados.'
+        );
     }
 
+    // Insere apenas partidas novas
+    // A chave UNIQUE do banco impede duplicações
     const sql = `
         INSERT INTO riot_partida (
             riot_conta_id,
@@ -82,13 +88,6 @@ async function salvarPartidaRiot(conexao, partida) {
             pontuacao
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-            kills = VALUES(kills),
-            deaths = VALUES(deaths),
-            assists = VALUES(assists),
-            mapa = VALUES(mapa),
-            resultado = VALUES(resultado),
-            pontuacao = VALUES(pontuacao)
     `;
 
     const valores = [
@@ -102,6 +101,8 @@ async function salvarPartidaRiot(conexao, partida) {
         partida.pontuacao ?? 0
     ];
 
+    // Em caso de duplicação, o MySQL gera ER_DUP_ENTRY
+    // Esse erro será tratado pela integração Riot
     const [resultado] = await conexao.execute(sql, valores);
 
     return resultado;
