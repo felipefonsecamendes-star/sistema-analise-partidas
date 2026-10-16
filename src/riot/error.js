@@ -2,7 +2,7 @@
 // Padroniza os erros da integração com a Riot Games
 
 function tratarErroRiot(erro) {
-    // Erro padrão, sem expor informações internas
+    // Resposta padrão para falhas de comunicação
     const resposta = {
         status: 502,
         sucesso: false,
@@ -15,7 +15,19 @@ function tratarErroRiot(erro) {
 
     const status = Number(erro.status);
 
-    // Erros conhecidos da API Riot
+    // Trata especificamente partidas duplicadas
+    if (
+        status === 409 &&
+        erro.message === 'Esta partida já foi importada anteriormente.'
+    ) {
+        return {
+            status: 409,
+            sucesso: false,
+            mensagem: 'Esta partida já foi importada anteriormente.'
+        };
+    }
+
+    // Mensagens para erros conhecidos da API Riot
     const mensagens = {
         400: 'A solicitação enviada à Riot é inválida.',
         401: 'A autenticação com a Riot falhou.',
@@ -28,9 +40,8 @@ function tratarErroRiot(erro) {
         504: 'A Riot demorou demais para responder.'
     };
 
+    // Verifica se o código de erro é conhecido
     if (Object.prototype.hasOwnProperty.call(mensagens, status)) {
-        // Erros de configuração da chave e falhas da Riot
-        // são apresentados ao navegador como falhas de integração.
         resposta.status = [400, 404, 429].includes(status)
             ? status
             : 502;
@@ -38,7 +49,7 @@ function tratarErroRiot(erro) {
         resposta.mensagem = mensagens[status];
     }
 
-    // Informa quando uma nova tentativa pode ser realizada
+    // Informa o tempo de espera em caso de limite da API
     if (status === 429 && erro.retryAfter != null) {
         const segundos = Number(erro.retryAfter);
 
@@ -63,7 +74,7 @@ function responderErroRiot(res, erro) {
         ...dados
     } = resposta;
 
-    // Repassa o tempo de espera quando houver limite da API
+    // Repassa o tempo de espera quando necessário
     if (status === 429 && dados.aguardarSegundos != null) {
         res.set(
             'Retry-After',
