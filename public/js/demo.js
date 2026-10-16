@@ -8,6 +8,7 @@ async function lerDemo(e) {
   try {
     const fd = new FormData(); fd.append('demo', arq);
     demoInfo = await f('/api/demo', { method: 'POST', body: fd });
+    const cs = [...document.querySelectorAll('.jogo')].find(b => /counter/i.test(b.dataset.nome)); if (cs) cs.click();
     demoInfo.data = new Date(arq.lastModified - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
     const grupos = {};
     demoInfo.jogadores.forEach((j, i) => (grupos[j.time] ||= []).push(`<option value="${i}">${esc(j.nome)}</option>`));
