@@ -22,6 +22,27 @@ const {
     calcularEstatisticasValorant
 } = require('../riot/stats');
 
+const {
+    responderErroRiot
+} = require('../riot/error');
+
+// Trata erros de operações que usam a API Riot e o banco
+function responderErroOperacao(res, erro, mensagem) {
+    if (
+        erro &&
+        Number.isInteger(erro.status) &&
+        erro.status >= 400 &&
+        erro.status <= 599
+    ) {
+        return responderErroRiot(res, erro);
+    }
+
+    return res.status(500).json({
+        sucesso: false,
+        mensagem
+    });
+}
+
 // Verifica se a integração Riot está disponível
 router.get('/status', (req, res) => {
     return res.json({
@@ -44,10 +65,7 @@ router.get('/conta/:nome/:tag', async (req, res) => {
     } catch (erro) {
         console.error('Erro ao buscar conta Riot:', erro.message);
 
-        return res.status(502).json({
-            sucesso: false,
-            mensagem: 'Não foi possível consultar a conta Riot.'
-        });
+        return responderErroRiot(res, erro);
     }
 });
 
@@ -65,10 +83,7 @@ router.get('/historico/:puuid', async (req, res) => {
     } catch (erro) {
         console.error('Erro ao buscar histórico Riot:', erro.message);
 
-        return res.status(502).json({
-            sucesso: false,
-            mensagem: 'Não foi possível consultar o histórico de partidas.'
-        });
+        return responderErroRiot(res, erro);
     }
 });
 
@@ -127,10 +142,11 @@ router.post('/vincular', async (req, res) => {
     } catch (erro) {
         console.error('Erro ao vincular conta Riot:', erro.message);
 
-        return res.status(500).json({
-            sucesso: false,
-            mensagem: 'Não foi possível vincular a conta Riot.'
-        });
+        return responderErroOperacao(
+            res,
+            erro,
+            'Não foi possível vincular a conta Riot.'
+        );
     }
 });
 
@@ -179,10 +195,11 @@ router.post('/importar-partida', async (req, res) => {
     } catch (erro) {
         console.error('Erro ao importar partida:', erro.message);
 
-        return res.status(500).json({
-            sucesso: false,
-            mensagem: 'Não foi possível importar a partida.'
-        });
+        return responderErroOperacao(
+            res,
+            erro,
+            'Não foi possível importar a partida.'
+        );
     }
 });
 
