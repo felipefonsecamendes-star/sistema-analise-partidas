@@ -1,10 +1,12 @@
+
 {
   "name": "sistema-analise-partidas",
   "version": "1.0.0",
   "description": "Sistema de Análise de Partidas FPS (TCC)",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test"
   },
   "dependencies": {
     "@laihoe/demoparser2": "^0.42.0",
