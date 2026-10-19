@@ -1,6 +1,9 @@
 
 const express = require('express');
 const router = express.Router();
+const { iniciarLoginRiot } = require('../riot/oauth');
+
+router.get('/login', iniciarLoginRiot);
 
 const db = require('../db');
 
