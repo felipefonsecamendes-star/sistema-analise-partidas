@@ -32,4 +32,35 @@ function iniciarLoginRiot(req, res) {
     });
 }
 
-module.exports = { iniciarLoginRiot };
+function receberCallbackRiot(req, res) {
+    const { code, state, error } = req.query;
+    const stateSalvo = req.session.riotOAuthState;
+
+    delete req.session.riotOAuthState;
+
+    if (error) {
+        return res.status(400).json({
+            sucesso: false,
+            mensagem: 'Autenticação Riot cancelada ou recusada.'
+        });
+    }
+
+    if (
+        typeof code !== 'string' ||
+        typeof state !== 'string' ||
+        !stateSalvo ||
+        state !== stateSalvo
+    ) {
+        return res.status(400).json({
+            sucesso: false,
+            mensagem: 'Retorno de autenticação inválido.'
+        });
+    }
+
+    return res.status(501).json({
+        sucesso: false,
+        mensagem: 'Retorno validado. A troca do código por tokens Riot ainda não foi implementada.'
+    });
+}
+
+module.exports = { iniciarLoginRiot, receberCallbackRiot };
