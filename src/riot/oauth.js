@@ -5,7 +5,7 @@ function iniciarLoginRiot(req, res) {
     if (!config.validateRiotOAuthConfig().valid) {
         return res.status(503).json({
             sucesso: false,
-            mensagem: 'Login Riot indisponível. Aguardando configuração e autorização do RSO.'
+           mensagem: 'A conexão automática com a Riot Games estará disponível após a autorização oficial. Por enquanto, utilize o formulário de vinculação manual.'
         });
     }
 
