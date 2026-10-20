@@ -156,20 +156,60 @@ router.post('/vincular', async (req, res) => {
         );
     }
 });
-} catch (erro) {
-    console.error(
-        'Errp ao buscar partidas recentes':,
-        erro.message
-        ):
 
-    return responderErroOperacao(
-        res,
-        erro,
-        'Não foi possível buscar as partidas recentes.'
+ // Lista as partidas recentes da conta Riot vinculada
+router.get('/partidas-recentes', async (req, res) => {
+    try {
+        const usuarioId = req.session.uid;
+
+        const [contas] = await db.execute(
+            `SELECT puuid
+             FROM riot_conta
+             WHERE usuario_id = ?
+             LIMIT 1`,
+            [usuarioId]
+        );
+
+        if (contas.length === 0) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: 'Vincule sua conta Riot primeiro.'
+            });
+        }
+
+        const historico = await buscarHistoricoValorant(
+            contas[0].puuid
+        );
+
+        const partidas = (historico.history || [])
+            .filter(partida => partida.matchId)
+            .slice(0, 20)
+            .map(partida => ({
+                matchId: partida.matchId,
+                gameStartTimeMillis: partida.gameStartTimeMillis || null,
+                queueId: partida.queueId || null
+            }));
+
+        return res.json({
+            sucesso: true,
+            total: partidas.length,
+            partidas
+        });
+
+    } catch (erro) {
+        console.error(
+            'Erro ao buscar partidas recentes:',
+            erro.message
+        );
+
+        return responderErroOperacao(
+            res,
+            erro,
+            'Não foi possível buscar as partidas recentes.'
         );
     }
 });
-          
+     
 // Importa uma partida do VALORANT
 router.post('/importar-partida', async (req, res) => {
     try {
