@@ -10,8 +10,11 @@ telas.riot = async () => {
       <form id="fv" class="grid"><label>Nome<input id="rnome" placeholder="SeuNome" required></label>
         <label>Tag<input id="rtag" placeholder="BR1" required></label>
         <div style="align-self:end;margin-bottom:14px"><button>Vincular conta</button></div></form>
-      <form id="fi" class="grid"><label style="grid-column:span 2">ID da partida<input id="rmatch" placeholder="Cole aqui o ID da partida" required></label>
-        <div style="align-self:end;margin-bottom:14px"><button class="sec">Importar partida</button></div></form>
+      <h3 class="sub">Partidas recentes</h3>
+<p class="rot">Selecione uma partida para importar suas estatísticas.</p>
+<div id="rrecentes">
+  <p class="rot">Carregando partidas...</p>
+</div>
       <p id="rmsg" class="erro" style="margin:0"></p></section>
     <div id="dados"></div>`;
   const aviso = (t, ok) => { $('#rmsg').className = ok ? 'ok' : 'erro'; $('#rmsg').textContent = t; };
@@ -20,11 +23,79 @@ telas.riot = async () => {
     try { const r = await f('/api/riot/vincular', J('POST', { nome: $('#rnome').value, tag: $('#rtag').value })); aviso(r.mensagem, true); }
     catch (x) { aviso(x); }
   };
-  $('#fi').onsubmit = async e => {
-    e.preventDefault();
-    try { const r = await f('/api/riot/importar-partida', J('POST', { matchId: $('#rmatch').value.trim() })); aviso(r.mensagem || 'Partida importada.', true); carrega(); }
-    catch (x) { aviso(x); }
-  };
+ 
+  async function carregarRecentes() {
+    const area = $('#rrecentes');
+    area.innerHTML = '<p class="rot">Carregando partidas...</p>';
+
+    try {
+      const resposta = await f('/api/riot/partidas-recentes');
+      const partidas = resposta.partidas || [];
+
+      if (!partidas.length) {
+        area.innerHTML = '<p class="rot">Nenhuma partida recente encontrada.</p>';
+        return;
+      }
+
+      area.innerHTML = `
+        <div class="wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Fila</th>
+                <th>Partida</th>
+                <th>Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${partidas.map((partida, i) => `
+                <tr>
+                  <td>${partida.gameStartTimeMillis
+                    ? new Date(partida.gameStartTimeMillis).toLocaleString('pt-BR')
+                    : '-'}</td>
+                  <td>${esc(partida.queueId || '-')}</td>
+                  <td>Partida ${i + 1}</td>
+                  <td><button class="sec" data-partida="${i}">Importar</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      area.querySelectorAll('[data-partida]').forEach(botao => {
+        botao.onclick = async () => {
+          const partida = partidas[Number(botao.dataset.partida)];
+
+          botao.disabled = true;
+          botao.textContent = 'Importando...';
+
+          try {
+            const resposta = await f(
+              '/api/riot/importar-partida',
+              J('POST', { matchId: partida.matchId })
+            );
+
+            aviso(resposta.mensagem || 'Partida importada!', true);
+            await carrega();
+          } catch (erro) {
+            aviso(String(erro));
+          } finally {
+            botao.disabled = false;
+            botao.textContent = 'Importar';
+          }
+        };
+      });
+
+    } catch (erro) {
+      area.innerHTML =
+        '<p class="rot">As partidas recentes ainda não estão disponíveis. É necessário acesso autorizado à API da Riot Games.</p>';
+    }
+  }
+
+  carregarRecentes();
+
   async function carrega() {
     try {
       const [s, p] = await Promise.all([f('/api/riot/estatisticas'), f('/api/riot/minhas-partidas')]);
