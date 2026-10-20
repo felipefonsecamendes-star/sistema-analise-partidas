@@ -156,7 +156,20 @@ router.post('/vincular', async (req, res) => {
         );
     }
 });
+} catch (erro) {
+    console.error(
+        'Errp ao buscar partidas recentes':,
+        erro.message
+        ):
 
+    return responderErroOperacao(
+        res,
+        erro,
+        'Não foi possível buscar as partidas recentes.'
+        );
+    }
+});
+          
 // Importa uma partida do VALORANT
 router.post('/importar-partida', async (req, res) => {
     try {
