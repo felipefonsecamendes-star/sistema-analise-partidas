@@ -1,9 +1,13 @@
 
 const express = require('express');
 const router = express.Router();
-const { iniciarLoginRiot } = require('../riot/oauth');
+const {
+    iniciarLoginRiot,
+    receberCallbackRiot
+} = require('../riot/oauth');
 
 router.get('/login', iniciarLoginRiot);
+router.get('/callback', receberCallbackRiot);
 
 const db = require('../db');
 
