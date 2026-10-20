@@ -1,7 +1,12 @@
 // Tela do VALORANT: vincular conta, importar partida, estatísticas e histórico
 telas.riot = async () => {
+  const riotLoginUrl = '/api/riot/login';
   v.innerHTML = `<h2 class="tit"><img class="ico" style="width:34px;height:34px;margin-right:12px" src="img/valorant.png" alt="">Valorant</h2>
     <section class="painel"><h3 class="sub" style="margin-top:0">Conta Riot</h3>
+    <p>Conecte sua conta Riot Games para acessar suas estatísticas.</p>
+<a class="btn" href="${riotLoginUrl}" style="display:inline-block;margin-bottom:20px">
+  Conectar com Riot Games
+</a>
       <form id="fv" class="grid"><label>Nome<input id="rnome" placeholder="SeuNome" required></label>
         <label>Tag<input id="rtag" placeholder="BR1" required></label>
         <div style="align-self:end;margin-bottom:14px"><button>Vincular conta</button></div></form>
