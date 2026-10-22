@@ -1,6 +1,6 @@
 
 const { riotRequest } = require('./client');
-const { henrikRequest } = require('./henrikClient');
+const { henrikRequest } = require('./henrikclient');
 
 // Consulta a API oficial da Riot
 async function consultarApiRiot(rota, tipo = 'regional') {
