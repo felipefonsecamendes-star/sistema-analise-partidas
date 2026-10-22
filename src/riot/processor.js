@@ -1,9 +1,27 @@
 
-function obterNomeMapa(dadosPartida) {
-    return dadosPartida?.metadata?.map?.name
-        || dadosPartida?.metadata?.map
-        || dadosPartida?.map?.name
-        || dadosPartida?.map
+function obterNomeMapa(entrada) {
+    const mapa = typeof entrada === 'string'
+        ? entrada
+        : entrada?.matchInfo?.mapId
+            || entrada?.metadata?.map?.name
+            || entrada?.metadata?.map
+            || entrada?.map?.name
+            || entrada?.map;
+
+    if (typeof mapa !== 'string' || !mapa.trim()) {
+        return 'Desconhecido';
+    }
+
+    const identificador = mapa.split('/').filter(Boolean).pop();
+
+    const nomes = {
+        Duality: 'Bind',
+        Triad: 'Haven',
+        Bonsai: 'Split'
+    };
+
+    return nomes[identificador]
+        || identificador
         || 'Desconhecido';
 }
 
@@ -24,31 +42,29 @@ function processarPartidaValorant(dadosPartida, puuid, riotContaId) {
         throw new Error('Jogador não encontrado na partida.');
     }
 
-    const equipe = jogador.team?.toLowerCase();
+    const equipe = String(
+        jogador.teamId || jogador.team || ''
+    ).toLowerCase();
+
     const equipes = dadosPartida.teams;
 
-    let dadosEquipe;
-
-    if (Array.isArray(equipes)) {
-        dadosEquipe = equipes.find(
-            team => String(team.teamId || team.team_id || '')
+    const dadosEquipe = Array.isArray(equipes)
+        ? equipes.find(team =>
+            String(team.teamId || team.team_id || '')
                 .toLowerCase() === equipe
-        );
-    } else {
-        dadosEquipe = equipes?.[equipe];
-    }
-
-    let resultado = 'Indefinido';
+        )
+        : equipes?.[equipe];
 
     const venceu = dadosEquipe?.won ?? dadosEquipe?.has_won;
 
-    if (typeof venceu === 'boolean') {
-        resultado = venceu ? 'Vitória' : 'Derrota';
-    }
+    const resultado = typeof venceu === 'boolean'
+        ? (venceu ? 'Vitória' : 'Derrota')
+        : 'Indefinido';
 
     return {
         riot_conta_id: riotContaId,
-        match_id: dadosPartida.metadata?.matchid
+        match_id: dadosPartida.matchInfo?.matchId
+            || dadosPartida.metadata?.matchid
             || dadosPartida.metadata?.matchId
             || dadosPartida.matchId,
         kills: jogador.stats?.kills ?? 0,
