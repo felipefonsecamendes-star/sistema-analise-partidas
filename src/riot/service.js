@@ -1,33 +1,17 @@
 
 const { riotRequest } = require('./client');
+const { henrikRequest } = require('./henrikClient');
 
-// Faz uma consulta GET à API da Riot Games
+// Consulta a API oficial da Riot
 async function consultarApiRiot(rota, tipo = 'regional') {
-    return await riotRequest(rota, tipo);
+    return riotRequest(rota, tipo);
 }
 
-// Busca uma conta Riot pelo nome e tag
+// Busca uma conta pela HenrikDev
 async function buscarContaPorRiotId(gameName, tagLine) {
     if (!gameName || !tagLine) {
         throw new Error('Nome e tag da Riot são obrigatórios.');
     }
-
-    const nome = encodeURIComponent(gameName);
-    const tag = encodeURIComponent(tagLine);
-
-    const rota = `/riot/account/v1/accounts/by-riot-id/${nome}/${tag}`;
-
-    // A API de contas utiliza roteamento regional
-    return await consultarApiRiot(rota, 'regional');
-}
-
-
-async function buscarContaPorRiotId(gameName, tagLine) {
-    if (!gameName || !tagLine) {
-        throw new Error('Nome e tag da Riot são obrigatórios.');
-    }
-
-    const { henrikRequest } = require('./henrikClient');
 
     const nome = encodeURIComponent(gameName.trim());
     const tag = encodeURIComponent(tagLine.trim());
@@ -37,22 +21,32 @@ async function buscarContaPorRiotId(gameName, tagLine) {
     );
 
     if (!resposta.data?.puuid) {
-        throw new Error('Conta não encontrada na HenrikDev.');
+        throw new Error('Conta não encontrada.');
     }
 
     return {
         puuid: resposta.data.puuid,
         gameName: resposta.data.name,
-        tagLine: resposta.data.tag
+        tagLine: resposta.data.tag,
+        region: resposta.data.region
     };
 }
 
+// Mantém temporariamente a consulta antiga de partidas
+async function buscarPartidaValorant(matchId) {
+    if (!matchId) {
+        throw new Error('O ID da partida é obrigatório.');
+    }
 
-    // A API de partidas utiliza roteamento de plataforma
-    return await consultarApiRiot(rota, 'plataforma');
+    const id = encodeURIComponent(matchId);
+
+    return consultarApiRiot(
+        `/val/match/v1/matches/${id}`,
+        'plataforma'
+    );
 }
 
-// Busca o histórico de partidas de um jogador
+// Mantém temporariamente a consulta antiga de histórico
 async function buscarHistoricoValorant(puuid) {
     if (!puuid) {
         throw new Error('O PUUID do jogador é obrigatório.');
@@ -60,10 +54,10 @@ async function buscarHistoricoValorant(puuid) {
 
     const id = encodeURIComponent(puuid);
 
-    const rota = `/val/match/v1/matchlists/by-puuid/${id}`;
-
-    // O histórico utiliza roteamento de plataforma
-    return await consultarApiRiot(rota, 'plataforma');
+    return consultarApiRiot(
+        `/val/match/v1/matchlists/by-puuid/${id}`,
+        'plataforma'
+    );
 }
 
 module.exports = {
