@@ -21,15 +21,32 @@ async function buscarContaPorRiotId(gameName, tagLine) {
     return await consultarApiRiot(rota, 'regional');
 }
 
-// Busca uma partida do VALORANT pelo ID
-async function buscarPartidaValorant(matchId) {
-    if (!matchId) {
-        throw new Error('O ID da partida é obrigatório.');
+
+async function buscarContaPorRiotId(gameName, tagLine) {
+    if (!gameName || !tagLine) {
+        throw new Error('Nome e tag da Riot são obrigatórios.');
     }
 
-    const id = encodeURIComponent(matchId);
+    const { henrikRequest } = require('./henrikClient');
 
-    const rota = `/val/match/v1/matches/${id}`;
+    const nome = encodeURIComponent(gameName.trim());
+    const tag = encodeURIComponent(tagLine.trim());
+
+    const resposta = await henrikRequest(
+        `/valorant/v1/account/${nome}/${tag}`
+    );
+
+    if (!resposta.data?.puuid) {
+        throw new Error('Conta não encontrada na HenrikDev.');
+    }
+
+    return {
+        puuid: resposta.data.puuid,
+        gameName: resposta.data.name,
+        tagLine: resposta.data.tag
+    };
+}
+
 
     // A API de partidas utiliza roteamento de plataforma
     return await consultarApiRiot(rota, 'plataforma');
