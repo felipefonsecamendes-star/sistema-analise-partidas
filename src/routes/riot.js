@@ -260,12 +260,13 @@ router.post('/importar-partida', async (req, res) => {
 } catch (erro) {
     console.error('Erro ao importar partida:', erro);
 
-    return res.status(500).json({
+        return res.status(500).json({
         sucesso: false,
         mensagem: erro.message,
         codigo: erro.code || null
     });
 }
+});
 
 
 // Lista as partidas importadas do usuário logado
