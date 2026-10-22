@@ -158,16 +158,17 @@ router.post('/vincular', async (req, res) => {
 });
 
  // Lista as partidas recentes da conta Riot vinculada
+
 router.get('/partidas-recentes', async (req, res) => {
     try {
-        const usuarioId = req.session.uid;
+        const { henrikRequest } = require('../riot/henrikClient');
 
         const [contas] = await db.execute(
-            `SELECT puuid
+            `SELECT game_name, tag_line
              FROM riot_conta
              WHERE usuario_id = ?
              LIMIT 1`,
-            [usuarioId]
+            [req.session.uid]
         );
 
         if (contas.length === 0) {
@@ -177,17 +178,22 @@ router.get('/partidas-recentes', async (req, res) => {
             });
         }
 
-        const historico = await buscarHistoricoValorant(
-            contas[0].puuid
+        const conta = contas[0];
+        const nome = encodeURIComponent(conta.game_name);
+        const tag = encodeURIComponent(conta.tag_line);
+
+        const resposta = await henrikRequest(
+            `/valorant/v3/matches/na/${nome}/${tag}?size=10`
         );
 
-        const partidas = (historico.history || [])
-            .filter(partida => partida.matchId)
-            .slice(0, 20)
-            .map(partida => ({
-                matchId: partida.matchId,
-                gameStartTimeMillis: partida.gameStartTimeMillis || null,
-                queueId: partida.queueId || null
+        const partidas = (resposta.data || [])
+            .filter(p => p.metadata?.matchid)
+            .map(p => ({
+                matchId: p.metadata.matchid,
+                gameStartTimeMillis: p.metadata.game_start_patched
+                    ? Date.parse(p.metadata.game_start_patched) || null
+                    : null,
+                queueId: p.metadata.mode || null
             }));
 
         return res.json({
@@ -197,18 +203,15 @@ router.get('/partidas-recentes', async (req, res) => {
         });
 
     } catch (erro) {
-        console.error(
-            'Erro ao buscar partidas recentes:',
-            erro.message
-        );
+        console.error('Erro HenrikDev:', erro.message);
 
-        return responderErroOperacao(
-            res,
-            erro,
-            'Não foi possível buscar as partidas recentes.'
-        );
+        return res.status(erro.status || 500).json({
+            sucesso: false,
+            mensagem: 'Não foi possível buscar as partidas recentes.'
+        });
     }
 });
+
      
 // Importa uma partida do VALORANT
 router.post('/importar-partida', async (req, res) => {
