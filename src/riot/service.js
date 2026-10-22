@@ -32,19 +32,25 @@ async function buscarContaPorRiotId(gameName, tagLine) {
     };
 }
 
-// Mantém temporariamente a consulta antiga de partidas
+
 async function buscarPartidaValorant(matchId) {
-    if (!matchId) {
+    if (!matchId || typeof matchId !== 'string') {
         throw new Error('O ID da partida é obrigatório.');
     }
 
-    const id = encodeURIComponent(matchId);
+    const id = encodeURIComponent(matchId.trim());
 
-    return consultarApiRiot(
-        `/val/match/v1/matches/${id}`,
-        'plataforma'
+    const resposta = await henrikRequest(
+        `/valorant/v2/match/${id}`
     );
+
+    if (!resposta.data?.metadata?.matchid) {
+        throw new Error('Partida não encontrada na HenrikDev.');
+    }
+
+    return resposta.data;
 }
+
 
 // Mantém temporariamente a consulta antiga de histórico
 async function buscarHistoricoValorant(puuid) {
