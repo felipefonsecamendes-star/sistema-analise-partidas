@@ -257,16 +257,18 @@ router.post('/importar-partida', async (req, res) => {
             partida
         });
     
-} catch (erro) {
-    console.error('Erro ao importar partida:', erro);
 
-        return res.status(500).json({
-        sucesso: false,
-        mensagem: erro.message,
-        codigo: erro.code || null
-    });
+} catch (erro) {
+    console.error('Erro ao importar partida:', erro.message);
+
+    return responderErroOperacao(
+        res,
+        erro,
+        'Não foi possível importar a partida.'
+    );
 }
 });
+
 
 
 // Lista as partidas importadas do usuário logado
