@@ -227,12 +227,13 @@ router.post('/importar-partida', async (req, res) => {
         }
 
         const [contas] = await db.execute(
-            `SELECT id, puuid
-             FROM riot_conta
-             WHERE usuario_id = ?
-             LIMIT 1`,
-            [usuarioId]
-        );
+    `SELECT id, puuid
+     FROM riot_conta
+     WHERE usuario_id = ?
+     ORDER BY id DESC
+     LIMIT 1`,
+    [usuarioId]
+);
 
         if (contas.length === 0) {
             return res.status(404).json({
