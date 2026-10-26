@@ -1,5 +1,4 @@
 
-// Busca uma conta Riot pelo PUUID
 async function buscarContaRiot(conexao, puuid) {
     if (!conexao || !puuid) {
         throw new Error('Conexão e PUUID são obrigatórios.');
@@ -23,7 +22,6 @@ async function buscarContaRiot(conexao, puuid) {
     return resultados[0] || null;
 }
 
-// Salva ou atualiza uma conta Riot no banco
 async function salvarContaRiot(conexao, conta) {
     if (
         !conexao ||
@@ -60,8 +58,6 @@ async function salvarContaRiot(conexao, conta) {
 
     return resultado;
 }
-
-// Salva uma partida do VALORANT no banco de dados
 
 async function salvarPartidaRiot(conexao, partida) {
     if (
@@ -127,14 +123,6 @@ async function salvarPartidaRiot(conexao, partida) {
         sql,
         valores
     );
-
-    return resultado;
-}
-
-
-    // Em caso de duplicação, o MySQL gera ER_DUP_ENTRY
-    // Esse erro será tratado pela integração Riot
-    const [resultado] = await conexao.execute(sql, valores);
 
     return resultado;
 }
