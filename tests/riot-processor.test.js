@@ -7,7 +7,6 @@ const {
     obterNomeMapa
 } = require('../src/riot/processor');
 
-// Cria uma partida simulada para os testes
 function criarPartida() {
     return {
         matchInfo: {
@@ -18,14 +17,19 @@ function criarPartida() {
             {
                 puuid: 'JOGADOR-123',
                 teamId: 'Blue',
+                damage_made: 2400,
                 stats: {
                     kills: 20,
                     deaths: 10,
                     assists: 5,
-                    score: 350
+                    score: 3500,
+                    headshots: 12,
+                    bodyshots: 24,
+                    legshots: 4
                 }
             }
         ],
+        rounds: Array.from({ length: 20 }, () => ({})),
         teams: [
             {
                 teamId: 'Blue',
@@ -39,12 +43,9 @@ function criarPartida() {
     };
 }
 
-// Teste 1: processa uma vitória
-test('processa corretamente uma vitória', () => {
-    const dados = criarPartida();
-
+test('processa vitória e estatísticas avançadas', () => {
     const resultado = processarPartidaValorant(
-        dados,
+        criarPartida(),
         'JOGADOR-123',
         1
     );
@@ -57,14 +58,22 @@ test('processa corretamente uma vitória', () => {
         assists: 5,
         mapa: 'Ascent',
         resultado: 'Vitória',
-        pontuacao: 350
+        pontuacao: 3500,
+        headshots: 12,
+        bodyshots: 24,
+        legshots: 4,
+        dano_total: 2400,
+        rodadas_jogadas: 20,
+        hs_percentual: 30,
+        kd: 2,
+        kda: 2.5,
+        adr: 120,
+        acs: 175
     });
 });
 
-// Teste 2: processa uma derrota
 test('identifica corretamente uma derrota', () => {
     const dados = criarPartida();
-
     dados.teams[0].won = false;
 
     const resultado = processarPartidaValorant(
@@ -76,13 +85,10 @@ test('identifica corretamente uma derrota', () => {
     assert.equal(resultado.resultado, 'Derrota');
 });
 
-// Teste 3: jogador não encontrado
 test('rejeita jogador que não participou da partida', () => {
-    const dados = criarPartida();
-
     assert.throws(
         () => processarPartidaValorant(
-            dados,
+            criarPartida(),
             'OUTRO-JOGADOR',
             1
         ),
@@ -90,11 +96,12 @@ test('rejeita jogador que não participou da partida', () => {
     );
 });
 
-// Teste 4: estatísticas ausentes
 test('utiliza zero quando faltam estatísticas', () => {
     const dados = criarPartida();
 
     delete dados.players[0].stats;
+    delete dados.players[0].damage_made;
+    delete dados.rounds;
 
     const resultado = processarPartidaValorant(
         dados,
@@ -106,12 +113,15 @@ test('utiliza zero quando faltam estatísticas', () => {
     assert.equal(resultado.deaths, 0);
     assert.equal(resultado.assists, 0);
     assert.equal(resultado.pontuacao, 0);
+    assert.equal(resultado.hs_percentual, 0);
+    assert.equal(resultado.kd, 0);
+    assert.equal(resultado.kda, 0);
+    assert.equal(resultado.adr, 0);
+    assert.equal(resultado.acs, 0);
 });
 
-// Teste 5: resultado indefinido
 test('identifica resultado indefinido sem equipe', () => {
     const dados = criarPartida();
-
     dados.teams = [];
 
     const resultado = processarPartidaValorant(
@@ -123,7 +133,6 @@ test('identifica resultado indefinido sem equipe', () => {
     assert.equal(resultado.resultado, 'Indefinido');
 });
 
-// Teste 6: converte nomes dos mapas
 test('converte identificadores de mapas conhecidos', () => {
     assert.equal(
         obterNomeMapa('/Game/Maps/Ascent/Ascent'),
@@ -146,7 +155,6 @@ test('converte identificadores de mapas conhecidos', () => {
     );
 });
 
-// Teste 7: mapa desconhecido
 test('trata mapas desconhecidos', () => {
     assert.equal(
         obterNomeMapa('/Game/Maps/NovoMapa/NovoMapa'),
@@ -164,7 +172,6 @@ test('trata mapas desconhecidos', () => {
     );
 });
 
-// Teste 8: dados obrigatórios
 test('rejeita dados obrigatórios ausentes', () => {
     const dados = criarPartida();
 
