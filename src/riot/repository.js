@@ -62,6 +62,7 @@ async function salvarContaRiot(conexao, conta) {
 }
 
 // Salva uma partida do VALORANT no banco de dados
+
 async function salvarPartidaRiot(conexao, partida) {
     if (
         !conexao ||
@@ -74,8 +75,6 @@ async function salvarPartidaRiot(conexao, partida) {
         );
     }
 
-    // Insere apenas partidas novas
-    // A chave UNIQUE do banco impede duplicações
     const sql = `
         INSERT INTO riot_partida (
             riot_conta_id,
@@ -85,9 +84,22 @@ async function salvarPartidaRiot(conexao, partida) {
             assists,
             mapa,
             resultado,
-            pontuacao
+            pontuacao,
+            headshots,
+            bodyshots,
+            legshots,
+            dano_total,
+            rodadas_jogadas,
+            hs_percentual,
+            kd,
+            kda,
+            adr,
+            acs
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (
+            ?, ?, ?, ?, ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?, ?, ?, ?, ?
+        )
     `;
 
     const valores = [
@@ -98,8 +110,27 @@ async function salvarPartidaRiot(conexao, partida) {
         partida.assists ?? 0,
         partida.mapa ?? null,
         partida.resultado ?? null,
-        partida.pontuacao ?? 0
+        partida.pontuacao ?? 0,
+        partida.headshots ?? 0,
+        partida.bodyshots ?? 0,
+        partida.legshots ?? 0,
+        partida.dano_total ?? 0,
+        partida.rodadas_jogadas ?? 0,
+        partida.hs_percentual ?? 0,
+        partida.kd ?? 0,
+        partida.kda ?? 0,
+        partida.adr ?? 0,
+        partida.acs ?? 0
     ];
+
+    const [resultado] = await conexao.execute(
+        sql,
+        valores
+    );
+
+    return resultado;
+}
+
 
     // Em caso de duplicação, o MySQL gera ER_DUP_ENTRY
     // Esse erro será tratado pela integração Riot
