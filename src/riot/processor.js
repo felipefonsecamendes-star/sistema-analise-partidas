@@ -61,18 +61,70 @@ function processarPartidaValorant(dadosPartida, puuid, riotContaId) {
         ? (venceu ? 'Vitória' : 'Derrota')
         : 'Indefinido';
 
+    const stats = jogador.stats || {};
+
+    const kills = stats.kills ?? 0;
+    const deaths = stats.deaths ?? 0;
+    const assists = stats.assists ?? 0;
+
+    const headshots = stats.headshots ?? 0;
+    const bodyshots = stats.bodyshots ?? 0;
+    const legshots = stats.legshots ?? 0;
+
+    const totalAcertos = headshots + bodyshots + legshots;
+
+    const hs_percentual = totalAcertos > 0
+        ? Number((headshots / totalAcertos * 100).toFixed(2))
+        : 0;
+
+    const kd = deaths > 0
+        ? Number((kills / deaths).toFixed(2))
+        : kills;
+
+    const kda = deaths > 0
+        ? Number(((kills + assists) / deaths).toFixed(2))
+        : kills + assists;
+
+    const rodadas = dadosPartida.rounds?.length
+        || dadosPartida.metadata?.rounds_played
+        || 0;
+
+    const dano_total = jogador.damage_made
+        ?? stats.damage_made
+        ?? 0;
+
+    const adr = rodadas > 0
+        ? Number((dano_total / rodadas).toFixed(2))
+        : 0;
+
+    const pontuacao = stats.score ?? 0;
+
+    const acs = rodadas > 0
+        ? Number((pontuacao / rodadas).toFixed(2))
+        : 0;
+
     return {
         riot_conta_id: riotContaId,
         match_id: dadosPartida.matchInfo?.matchId
             || dadosPartida.metadata?.matchid
             || dadosPartida.metadata?.matchId
             || dadosPartida.matchId,
-        kills: jogador.stats?.kills ?? 0,
-        deaths: jogador.stats?.deaths ?? 0,
-        assists: jogador.stats?.assists ?? 0,
+        kills,
+        deaths,
+        assists,
         mapa: obterNomeMapa(dadosPartida),
         resultado,
-        pontuacao: jogador.stats?.score ?? 0
+        pontuacao,
+        headshots,
+        bodyshots,
+        legshots,
+        dano_total,
+        rodadas_jogadas: rodadas,
+        hs_percentual,
+        kd,
+        kda,
+        adr,
+        acs
     };
 }
 
