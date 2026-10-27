@@ -389,6 +389,33 @@ telas.riot = async () => {
 
       // Carrega a imagem correspondente ao mapa da partida
       const imagemMapa = await buscarImagemMapa(nomeMapa);
+     
+      // Busca os ícones de todos os agentes
+      let iconesAgentes = {};
+
+      try {
+        const respostaAgentes = await fetch(
+          'https://valorant-api.com/v1/agents?language=en-US&isPlayableCharacter=true'
+        );
+
+        if (respostaAgentes.ok) {
+          const dadosAgentes = await respostaAgentes.json();
+
+          for (const agente of dadosAgentes.data || []) {
+            if (agente.displayName && agente.displayIcon) {
+              iconesAgentes[agente.displayName.toLowerCase()] =
+                agente.displayIcon;
+            }
+          }
+        }
+      } catch (erro) {
+        console.warn('Ícones dos agentes indisponíveis:', erro);
+      }
+
+      const obterIconeAgente = nome => {
+        return iconesAgentes[String(nome || '').toLowerCase()] || '';
+      };
+
 
       const equipes = [...new Set(
         jogadores.map(jogador => jogador.equipe || 'Sem equipe')
@@ -422,7 +449,30 @@ telas.riot = async () => {
                       : ''}
                   </td>
 
-                  <td>${esc(jogador.agente || '-')}</td>
+                 
+<td>
+  <div style="
+    display:flex;
+    align-items:center;
+    gap:10px;
+  ">
+    ${obterIconeAgente(jogador.agente) ? `
+      <img
+        src="${esc(obterIconeAgente(jogador.agente))}"
+        alt="${esc(jogador.agente || 'Agente')}"
+        style="
+          width:36px;
+          height:36px;
+          object-fit:contain;
+          border-radius:6px;
+        "
+      >
+    ` : ''}
+
+    <span>${esc(jogador.agente || '-')}</span>
+  </div>
+</td>
+
                   <td>${n(jogador.kills)}</td>
                   <td>${n(jogador.deaths)}</td>
                   <td>${n(jogador.assists)}</td>
