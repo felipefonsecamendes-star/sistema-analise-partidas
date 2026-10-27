@@ -100,8 +100,22 @@ telas.riot = async () => {
     try {
       const [s, p] = await Promise.all([f('/api/riot/estatisticas'), f('/api/riot/minhas-partidas')]);
       const e = s.estatisticas, n = x => Number(x) || 0, partidas = p.partidas;
-      const itens = [['Partidas', e.totalPartidas], ['Vitórias', e.vitorias], ['Derrotas', e.derrotas], ['Kills', e.kills], ['Mortes', e.deaths],
-        ['Assistências', e.assists], ['K/D', n(e.kd).toFixed(2)], ['KDA', n(e.kda).toFixed(2)], ['Taxa de vitória', e.taxaVitoria + '%']];
+      
+const itens = [
+  ['Partidas', e.totalPartidas],
+  ['Vitórias', e.vitorias],
+  ['Derrotas', e.derrotas],
+  ['Kills', e.kills],
+  ['Mortes', e.deaths],
+  ['Assistências', e.assists],
+  ['K/D', n(e.kd).toFixed(2)],
+  ['KDA', n(e.kda).toFixed(2)],
+  ['HS%', n(e.hsPercentual).toFixed(2) + '%'],
+  ['ADR', n(e.adr).toFixed(2)],
+  ['ACS', n(e.acs).toFixed(2)],
+  ['Win Rate', n(e.taxaVitoria).toFixed(2) + '%']
+];
+
       $('#dados').innerHTML = `<div class="cards tres">${itens.map(([a, b]) => `<div class="card"><small>${a}</small><b>${b}</b></div>`).join('')}</div>
         <h3 class="sub">Últimas partidas</h3>
         <div class="grid"><label>Resultado<select id="rfr"><option value="">Todos</option><option>Vitória</option><option>Derrota</option></select></label>
