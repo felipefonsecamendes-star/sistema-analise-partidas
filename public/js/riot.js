@@ -1,6 +1,20 @@
 
- // Tela do VALORANT: consultas, partidas, estatísticas e detalhes
 telas.riot = async () => {
+  let contaSelecionada = null;
+  let contas = [];
+  let cacheMapas = null;
+  let cacheAgentes = null;
+
+  const numero = valor => Number(valor) || 0;
+
+  const nomeDaConta = conta =>
+    `${conta.game_name || ''}#${conta.tag_line || ''}`;
+
+  const statusDaConta = conta =>
+    conta?.verificacao?.propriedade_verificada === true
+      ? 'Propriedade verificada'
+      : 'Propriedade não verificada';
+
   v.innerHTML = `
     <h2 class="tit">
       <img class="ico"
@@ -16,33 +30,40 @@ telas.riot = async () => {
 
       <p>
         Consulte estatísticas de jogadores pelo Riot ID.
-        A consulta não comprova que a conta pertence a você.
-      </p>
-
-      <p style="color:#f0b35a;font-weight:600">
-        Conta não verificada — a propriedade da conta
-        não foi confirmada pela Riot Games.
+        Adicionar uma conta não comprova que ela pertence a você.
       </p>
 
       <form id="fv" class="grid">
-        <label>Nome
+        <label>
+          Nome
           <input id="rnome" placeholder="NomeDoJogador" required>
         </label>
 
-        <label>Tag
+        <label>
+          Tag
           <input id="rtag" placeholder="BR1" required>
         </label>
 
         <div style="align-self:end;margin-bottom:14px">
-          <button>Consultar conta</button>
+          <button type="submit">Consultar conta</button>
         </div>
       </form>
+
+      <h3 class="sub">Contas consultadas</h3>
+
+      <label>
+        Selecione uma conta
+        <select id="rconta">
+          <option value="">Carregando contas...</option>
+        </select>
+      </label>
+
+      <p id="rstatus" class="rot"></p>
 
       <h3 class="sub">Partidas recentes</h3>
 
       <p class="rot">
-        Partidas da conta selecionada para consulta.
-        Os dados não representam uma conta de propriedade verificada.
+        Selecione uma partida da conta escolhida para importar.
       </p>
 
       <div id="rrecentes">
@@ -61,6 +82,60 @@ telas.riot = async () => {
     elemento.textContent = mensagem;
   };
 
+  async function carregarContas(preferida = null) {
+    const resposta = await f('/api/riot/contas-consultadas');
+
+    contas = resposta.contas || [];
+
+    const ids = contas.map(conta => String(conta.id));
+    const anterior = String(contaSelecionada || '');
+
+    if (preferida && ids.includes(String(preferida))) {
+      contaSelecionada = String(preferida);
+    } else if (ids.includes(anterior)) {
+      contaSelecionada = anterior;
+    } else {
+      contaSelecionada = contas.length
+        ? String(contas[0].id)
+        : null;
+    }
+
+    const seletor = $('#rconta');
+
+    seletor.innerHTML = contas.length
+      ? contas.map(conta => `
+          <option value="${Number(conta.id)}">
+            ${esc(nomeDaConta(conta))}
+          </option>
+        `).join('')
+      : '<option value="">Nenhuma conta cadastrada</option>';
+
+    seletor.value = contaSelecionada || '';
+
+    atualizarStatus();
+  }
+
+  function atualizarStatus() {
+    const conta = contas.find(
+      item => String(item.id) === String(contaSelecionada)
+    );
+
+    const elemento = $('#rstatus');
+
+    if (!conta) {
+      elemento.textContent = 'Adicione uma conta para começar.';
+      return;
+    }
+
+    elemento.textContent =
+      `${nomeDaConta(conta)} — ${statusDaConta(conta)}`;
+
+    elemento.style.color =
+      conta.verificacao?.propriedade_verificada
+        ? '#58d68d'
+        : '#f0b35a';
+  }
+
   $('#fv').onsubmit = async evento => {
     evento.preventDefault();
 
@@ -68,25 +143,32 @@ telas.riot = async () => {
       const resposta = await f(
         '/api/riot/vincular',
         J('POST', {
-          nome: $('#rnome').value,
-          tag: $('#rtag').value
+          nome: $('#rnome').value.trim(),
+          tag: $('#rtag').value.trim()
         })
       );
 
+      await carregarContas(resposta.contaId);
+
       aviso(
-        'Conta adicionada para consulta. Propriedade não verificada.',
+        resposta.mensagem ||
+        'Conta adicionada para consulta.',
         true
       );
 
-      await carregarRecentes();
-      await carrega();
+      await atualizarDados();
 
     } catch (erro) {
       aviso(String(erro), false);
     }
   };
 
-  let cacheMapas = null;
+  $('#rconta').onchange = async evento => {
+    contaSelecionada = evento.target.value || null;
+
+    atualizarStatus();
+    await atualizarDados();
+  };
 
   async function buscarImagemMapa(nomeMapa) {
     try {
@@ -96,7 +178,7 @@ telas.riot = async () => {
         );
 
         if (!resposta.ok) {
-          throw new Error('Não foi possível consultar os mapas.');
+          throw new Error('Mapas indisponíveis.');
         }
 
         const dados = await resposta.json();
@@ -108,7 +190,8 @@ telas.riot = async () => {
 
       const mapa = cacheMapas.find(item =>
         normalizar(item.displayName) === normalizar(nomeMapa) ||
-        normalizar(item.mapUrl?.split('/').pop()) === normalizar(nomeMapa)
+        normalizar(item.mapUrl?.split('/').pop()) ===
+          normalizar(nomeMapa)
       );
 
       return mapa?.splash || '';
@@ -119,13 +202,66 @@ telas.riot = async () => {
     }
   }
 
-  async function carregarRecentes() {
-    const area = $('#rrecentes');
+  async function buscarIconesAgentes() {
+    if (cacheAgentes) return cacheAgentes;
 
-    area.innerHTML = '<p class="rot">Carregando partidas...</p>';
+    const icones = {};
 
     try {
-      const resposta = await f('/api/riot/partidas-recentes');
+      const resposta = await fetch(
+        'https://valorant-api.com/v1/agents?language=en-US&isPlayableCharacter=true'
+      );
+
+      if (resposta.ok) {
+        const dados = await resposta.json();
+
+        for (const agente of dados.data || []) {
+          if (agente.displayName && agente.displayIcon) {
+            icones[agente.displayName.toLowerCase()] =
+              agente.displayIcon;
+          }
+        }
+      }
+    } catch (erro) {
+      console.warn('Ícones indisponíveis:', erro);
+    }
+
+    cacheAgentes = icones;
+    return icones;
+  }
+
+  async function atualizarDados() {
+    const id = contaSelecionada;
+
+    if (!id) {
+      $('#rrecentes').innerHTML =
+        '<p class="rot">Selecione uma conta Riot.</p>';
+
+      $('#dados').innerHTML =
+        '<p class="rot">Nenhuma conta selecionada.</p>';
+
+      return;
+    }
+
+    await Promise.all([
+      carregarRecentes(id),
+      carrega(id)
+    ]);
+  }
+
+  async function carregarRecentes(id = contaSelecionada) {
+    const area = $('#rrecentes');
+
+    area.innerHTML =
+      '<p class="rot">Carregando partidas recentes...</p>';
+
+    try {
+      const resposta = await f(
+        `/api/riot/partidas-recentes?contaId=${encodeURIComponent(id)}`
+      );
+
+      if (String(id) !== String(contaSelecionada)) return;
+
       const partidas = resposta.partidas || [];
 
       if (!partidas.length) {
@@ -176,21 +312,28 @@ telas.riot = async () => {
         botao.onclick = async () => {
           const partida = partidas[Number(botao.dataset.partida)];
 
+          if (String(id) !== String(contaSelecionada)) return;
+
           botao.disabled = true;
           botao.textContent = 'Importando...';
 
           try {
-            const resposta = await f(
+            const resultado = await f(
               '/api/riot/importar-partida',
-              J('POST', { matchId: partida.matchId })
+              J('POST', {
+                matchId: partida.matchId,
+                contaId: Number(id)
+              })
             );
 
             aviso(
-              resposta.mensagem || 'Partida importada!',
+              resultado.mensagem || 'Partida importada!',
               true
             );
 
-            await carrega();
+            if (String(id) === String(contaSelecionada)) {
+              await carrega(id);
+            }
 
           } catch (erro) {
             aviso(String(erro), false);
@@ -203,25 +346,41 @@ telas.riot = async () => {
       });
 
     } catch (erro) {
+      if (String(id) !== String(contaSelecionada)) return;
+
       area.innerHTML = `
         <p class="rot">
-          As partidas recentes ainda não estão disponíveis.
-          Verifique a conexão com a API do VALORANT.
+          Não foi possível carregar as partidas recentes:
+          ${esc(String(erro))}
         </p>
       `;
     }
   }
 
-  async function carrega() {
+  async function carrega(id = contaSelecionada) {
+    const area = $('#dados');
+
+    area.innerHTML =
+      '<p class="rot">Carregando estatísticas...</p>';
+
     try {
       const [s, p] = await Promise.all([
-        f('/api/riot/estatisticas'),
-        f('/api/riot/minhas-partidas')
+        f(
+          `/api/riot/estatisticas?contaId=${encodeURIComponent(id)}`
+        ),
+        f(
+          `/api/riot/minhas-partidas?contaId=${encodeURIComponent(id)}`
+        )
       ]);
 
-      const e = s.estatisticas;
-      const n = valor => Number(valor) || 0;
+      if (String(id) !== String(contaSelecionada)) return;
+
+      const e = s.estatisticas || {};
       const partidas = p.partidas || [];
+
+      const conta = contas.find(
+        item => String(item.id) === String(id)
+      );
 
       const itens = [
         ['Partidas', e.totalPartidas],
@@ -230,30 +389,34 @@ telas.riot = async () => {
         ['Kills', e.kills],
         ['Mortes', e.deaths],
         ['Assistências', e.assists],
-        ['K/D', n(e.kd).toFixed(2)],
-        ['KDA', n(e.kda).toFixed(2)],
-        ['HS%', n(e.hsPercentual).toFixed(2) + '%'],
-        ['ADR', n(e.adr).toFixed(2)],
-        ['ACS', n(e.acs).toFixed(2)],
-        ['Win Rate', n(e.taxaVitoria).toFixed(2) + '%']
+        ['K/D', numero(e.kd).toFixed(2)],
+        ['KDA', numero(e.kda).toFixed(2)],
+        ['HS%', numero(e.hsPercentual).toFixed(2) + '%'],
+        ['ADR', numero(e.adr).toFixed(2)],
+        ['ACS', numero(e.acs).toFixed(2)],
+        ['Win Rate', numero(e.taxaVitoria).toFixed(2) + '%']
       ];
 
-      $('#dados').innerHTML = `
+      area.innerHTML = `
+        <h3 class="sub">
+          Estatísticas de
+          ${esc(conta ? nomeDaConta(conta) : 'conta consultada')}
+        </h3>
+
         <p style="color:#f0b35a;font-weight:600">
-          Estatísticas de contas consultadas —
-          propriedade não verificada.
+          ${esc(conta ? statusDaConta(conta) : 'Não verificada')}
         </p>
 
         <div class="cards tres">
           ${itens.map(([titulo, valor]) => `
             <div class="card">
               <small>${titulo}</small>
-              <b>${valor}</b>
+              <b>${valor ?? 0}</b>
             </div>
           `).join('')}
         </div>
 
-        <h3 class="sub">Últimas partidas consultadas</h3>
+        <h3 class="sub">Partidas importadas</h3>
 
         <div class="grid">
           <label>
@@ -289,8 +452,7 @@ telas.riot = async () => {
         if (!lista.length) {
           $('#rhist').innerHTML = `
             <p class="rot">
-              Nenhuma partida encontrada.
-              Consulte uma conta e importe uma partida acima.
+              Nenhuma partida encontrada para esta conta.
             </p>
           `;
           return;
@@ -314,8 +476,8 @@ telas.riot = async () => {
 
               <tbody>
                 ${lista.map(partida => {
-                  const k = n(partida.kills);
-                  const d = n(partida.deaths);
+                  const k = numero(partida.kills);
+                  const d = numero(partida.deaths);
 
                   return `
                     <tr>
@@ -330,18 +492,13 @@ telas.riot = async () => {
                       <td>${esc(partida.mapa || '-')}</td>
 
                       <td>
-                        ${badge(
-                          partida.resultado || 'Indefinido'
-                        )}
+                        ${badge(partida.resultado || 'Indefinido')}
                       </td>
 
                       <td>${k}</td>
                       <td>${d}</td>
-                      <td>${n(partida.assists)}</td>
-
-                      <td>
-                        ${(d ? k / d : k).toFixed(2)}
-                      </td>
+                      <td>${numero(partida.assists)}</td>
+                      <td>${(d ? k / d : k).toFixed(2)}</td>
 
                       <td>
                         <button class="sec"
@@ -358,13 +515,13 @@ telas.riot = async () => {
         `;
       };
 
-      $('#rhist').addEventListener('click', evento => {
+      $('#rhist').onclick = evento => {
         const botao = evento.target.closest('[data-detalhes]');
 
         if (!botao) return;
 
-        abrirDetalhesPartida(botao.dataset.detalhes);
-      });
+        abrirDetalhesPartida(botao.dataset.detalhes, id);
+      };
 
       $('#rfr').onchange = desenha;
       $('#rfm').oninput = desenha;
@@ -372,7 +529,9 @@ telas.riot = async () => {
       desenha();
 
     } catch (erro) {
-      $('#dados').innerHTML = `
+      if (String(id) !== String(contaSelecionada)) return;
+
+      area.innerHTML = `
         <p class="erro">
           Não foi possível carregar os dados do Valorant:
           ${esc(String(erro))}
@@ -381,7 +540,10 @@ telas.riot = async () => {
     }
   }
 
-  async function abrirDetalhesPartida(id) {
+  async function abrirDetalhesPartida(
+    partidaId,
+    id = contaSelecionada
+  ) {
     const area = $('#dados');
 
     area.innerHTML = `
@@ -390,8 +552,10 @@ telas.riot = async () => {
 
     try {
       const resposta = await f(
-        `/api/riot/partida/${encodeURIComponent(id)}/detalhes`
+        `/api/riot/partida/${encodeURIComponent(partidaId)}/detalhes`
       );
+
+      if (String(id) !== String(contaSelecionada)) return;
 
       const partida = resposta.partida;
       const jogadores = resposta.jogadores || [];
@@ -402,43 +566,28 @@ telas.riot = async () => {
       const tagConta = String(partida.tag_line || '')
         .trim().replace(/^#/, '').toLowerCase();
 
-      const jogadorVinculado = jogador =>
+      const jogadorConsultado = jogador =>
         Boolean(nomeConta && tagConta) &&
-        String(jogador.nick || '').trim().toLowerCase() === nomeConta &&
-        String(jogador.tag || '').trim().replace(/^#/, '').toLowerCase() === tagConta;
-
-      const n = valor => Number(valor) || 0;
+        String(jogador.nick || '').trim().toLowerCase() ===
+          nomeConta &&
+        String(jogador.tag || '')
+          .trim()
+          .replace(/^#/, '')
+          .toLowerCase() === tagConta;
 
       const nomeMapa = String(partida.mapa || 'Desconhecido');
       const mapa = esc(nomeMapa);
       const resultado = partida.resultado || 'Indefinido';
 
-      const imagemMapa = await buscarImagemMapa(nomeMapa);
+      const [imagemMapa, iconesAgentes] = await Promise.all([
+        buscarImagemMapa(nomeMapa),
+        buscarIconesAgentes()
+      ]);
 
-      let iconesAgentes = {};
+      if (String(id) !== String(contaSelecionada)) return;
 
-      try {
-        const respostaAgentes = await fetch(
-          'https://valorant-api.com/v1/agents?language=en-US&isPlayableCharacter=true'
-        );
-
-        if (respostaAgentes.ok) {
-          const dadosAgentes = await respostaAgentes.json();
-
-          for (const agente of dadosAgentes.data || []) {
-            if (agente.displayName && agente.displayIcon) {
-              iconesAgentes[agente.displayName.toLowerCase()] =
-                agente.displayIcon;
-            }
-          }
-        }
-      } catch (erro) {
-        console.warn('Ícones dos agentes indisponíveis:', erro);
-      }
-
-      const obterIconeAgente = nome => {
-        return iconesAgentes[String(nome || '').toLowerCase()] || '';
-      };
+      const obterIconeAgente = nome =>
+        iconesAgentes[String(nome || '').toLowerCase()] || '';
 
       const equipes = [...new Set(
         jogadores.map(jogador => jogador.equipe || 'Sem equipe')
@@ -462,16 +611,21 @@ telas.riot = async () => {
 
             <tbody>
               ${lista.map(jogador => `
-                <tr style="${jogadorVinculado(jogador)
-                  ? 'background-color:rgba(0,140,255,0.25) !important; outline:2px solid #008cff; outline-offset:-2px;'
+                <tr style="${jogadorConsultado(jogador)
+                  ? 'background-color:rgba(0,140,255,0.25);outline:2px solid #008cff;outline-offset:-2px;'
                   : ''}">
 
                   <td>
                     <strong>
                       ${esc(jogador.nick || 'Desconhecido')}
                     </strong>
+
                     ${jogador.tag
                       ? '#' + esc(jogador.tag)
+                      : ''}
+
+                    ${jogadorConsultado(jogador)
+                      ? '<small style="display:block;color:#58a6ff">Jogador consultado</small>'
                       : ''}
                   </td>
 
@@ -500,16 +654,16 @@ telas.riot = async () => {
                     </div>
                   </td>
 
-                  <td>${n(jogador.kills)}</td>
-                  <td>${n(jogador.deaths)}</td>
-                  <td>${n(jogador.assists)}</td>
+                  <td>${numero(jogador.kills)}</td>
+                  <td>${numero(jogador.deaths)}</td>
+                  <td>${numero(jogador.assists)}</td>
 
                   <td>
-                    ${n(jogador.hs_percentual).toFixed(2)}%
+                    ${numero(jogador.hs_percentual).toFixed(2)}%
                   </td>
 
-                  <td>${n(jogador.adr).toFixed(2)}</td>
-                  <td>${n(jogador.acs).toFixed(2)}</td>
+                  <td>${numero(jogador.adr).toFixed(2)}</td>
+                  <td>${numero(jogador.acs).toFixed(2)}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -526,7 +680,9 @@ telas.riot = async () => {
           style="margin-top:16px;overflow:hidden">
 
           <p style="color:#f0b35a;font-weight:600">
-            Conta consultada — propriedade não verificada.
+            ${esc(partida.game_name || '')}#${esc(partida.tag_line || '')}
+            — ${esc(resposta.verificacao?.mensagem ||
+              'Propriedade não verificada.')}
           </p>
 
           ${imagemMapa ? `
@@ -559,19 +715,15 @@ telas.riot = async () => {
               font-size:28px;
               font-weight:bold;
             ">
-              <span style="color:#58a6ff">
-                BLUE
-              </span>
+              <span style="color:#58a6ff">BLUE</span>
 
               <span style="font-size:38px;color:#fff">
-                ${Number(partida.placar_blue)}
+                ${numero(partida.placar_blue)}
                 ×
-                ${Number(partida.placar_red)}
+                ${numero(partida.placar_red)}
               </span>
 
-              <span style="color:#ff5865">
-                RED
-              </span>
+              <span style="color:#ff5865">RED</span>
             </div>
           ` : `
             <p class="rot">
@@ -616,9 +768,11 @@ telas.riot = async () => {
             `}
       `;
 
-      $('#voltarPartidas').onclick = carrega;
+      $('#voltarPartidas').onclick = () => carrega(id);
 
     } catch (erro) {
+      if (String(id) !== String(contaSelecionada)) return;
+
       area.innerHTML = `
         <p class="erro">
           Erro ao carregar os detalhes:
@@ -630,10 +784,20 @@ telas.riot = async () => {
         </button>
       `;
 
-      $('#voltarPartidas').onclick = carrega;
+      $('#voltarPartidas').onclick = () => carrega(id);
     }
   }
 
-  carregarRecentes();
-  carrega();
+  try {
+    await carregarContas();
+    await atualizarDados();
+  } catch (erro) {
+    aviso('Não foi possível carregar as contas Riot.', false);
+
+    $('#rconta').innerHTML =
+      '<option value="">Erro ao carregar contas</option>';
+
+    $('#rrecentes').innerHTML = '';
+    $('#dados').innerHTML = '';
+  }
 };
