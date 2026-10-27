@@ -76,6 +76,40 @@ telas.riot = async () => {
     }
   };
 
+  // Busca automaticamente imagens oficiais dos mapas
+  let cacheMapas = null;
+
+  async function buscarImagemMapa(nomeMapa) {
+    try {
+      if (!cacheMapas) {
+        const resposta = await fetch(
+          'https://valorant-api.com/v1/maps?language=pt-BR'
+        );
+
+        if (!resposta.ok) {
+          throw new Error('Não foi possível consultar os mapas.');
+        }
+
+        const dados = await resposta.json();
+        cacheMapas = dados.data || [];
+      }
+
+      const normalizar = texto =>
+        String(texto || '').trim().toLowerCase();
+
+      const mapa = cacheMapas.find(item =>
+        normalizar(item.displayName) === normalizar(nomeMapa) ||
+        normalizar(item.mapUrl?.split('/').pop()) === normalizar(nomeMapa)
+      );
+
+      return mapa?.splash || '';
+
+    } catch (erro) {
+      console.warn('Imagem do mapa indisponível:', erro);
+      return '';
+    }
+  }
+
   async function carregarRecentes() {
     const area = $('#rrecentes');
 
@@ -349,8 +383,12 @@ telas.riot = async () => {
       const jogadores = resposta.jogadores || [];
       const n = valor => Number(valor) || 0;
 
-      const mapa = esc(partida.mapa || 'Desconhecido');
+      const nomeMapa = String(partida.mapa || 'Desconhecido');
+      const mapa = esc(nomeMapa);
       const resultado = partida.resultado || 'Indefinido';
+
+      // Carrega a imagem correspondente ao mapa da partida
+      const imagemMapa = await buscarImagemMapa(nomeMapa);
 
       const equipes = [...new Set(
         jogadores.map(jogador => jogador.equipe || 'Sem equipe')
@@ -407,7 +445,26 @@ telas.riot = async () => {
           ← Voltar às partidas
         </button>
 
-        <section class="painel" style="margin-top:16px">
+        <section class="painel"
+          style="margin-top:16px;overflow:hidden">
+
+          ${imagemMapa ? `
+            <img
+              src="${esc(imagemMapa)}"
+              alt="Mapa ${mapa}"
+              loading="lazy"
+              style="
+                display:block;
+                width:100%;
+                height:300px;
+                object-fit:cover;
+                object-position:center;
+                border-radius:10px;
+                margin-bottom:20px;
+              "
+            >
+          ` : ''}
+
           <h2 class="tit">${mapa}</h2>
 
           <div style="margin:14px 0">
