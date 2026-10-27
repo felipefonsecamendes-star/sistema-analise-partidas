@@ -331,7 +331,8 @@ router.get('/minhas-partidas', async (req, res) => {
 });
 
 
-// Retorna as estatísticas do VALORANT do usuário logado
+
+ // Retorna as estatísticas do VALORANT do usuário logado
 router.get('/estatisticas', async (req, res) => {
     try {
         const usuarioId = req.session.uid;
@@ -341,6 +342,12 @@ router.get('/estatisticas', async (req, res) => {
                 p.kills,
                 p.deaths,
                 p.assists,
+                p.headshots,
+                p.bodyshots,
+                p.legshots,
+                p.dano_total,
+                p.rodadas_jogadas,
+                p.pontuacao,
                 p.resultado
             FROM riot_partida AS p
             INNER JOIN riot_conta AS c
