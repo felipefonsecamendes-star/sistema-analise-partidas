@@ -47,6 +47,29 @@ function processarPartidaValorant(dadosPartida, puuid, riotContaId) {
     ).toLowerCase();
 
     const equipes = dadosPartida.teams;
+    
+    const obterPlacarEquipe = nome => {
+        const dados = Array.isArray(equipes)
+            ? equipes.find(time =>
+                String(time.teamId || time.team_id || time.team || '')
+                    .toLowerCase() === nome
+            )
+            : Object.entries(equipes || {}).find(
+                ([chave]) => chave.toLowerCase() === nome
+            )?.[1];
+
+        const pontos = dados?.rounds_won
+            ?? dados?.roundsWon
+            ?? dados?.rounds?.won;
+
+        return pontos != null && Number.isFinite(Number(pontos))
+            ? Number(pontos)
+            : null;
+    };
+
+    const placar_blue = obterPlacarEquipe('blue');
+    const placar_red = obterPlacarEquipe('red');
+
 
     const dadosEquipe = Array.isArray(equipes)
         ? equipes.find(team =>
@@ -114,6 +137,8 @@ function processarPartidaValorant(dadosPartida, puuid, riotContaId) {
         assists,
         mapa: obterNomeMapa(dadosPartida),
         resultado,
+        placar_blue,
+        placar_red,
         pontuacao,
         headshots,
         bodyshots,
