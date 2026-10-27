@@ -34,7 +34,6 @@ const {
 router.get('/login', iniciarLoginRiot);
 router.get('/callback', receberCallbackRiot);
 
-// Trata erros das operações Riot
 function responderErroOperacao(res, erro, mensagem) {
     if (
         erro &&
@@ -51,15 +50,30 @@ function responderErroOperacao(res, erro, mensagem) {
     });
 }
 
-// Status da integração
+function statusVerificacao(conta) {
+    const verificada =
+        conta?.propriedade_verificada === true ||
+        conta?.propriedade_verificada === 1;
+
+    return {
+        propriedade_verificada: verificada,
+        tipo: verificada ? 'verificada' : 'consulta',
+        mensagem: verificada
+            ? 'Propriedade verificada.'
+            : 'Conta consultada. Propriedade não verificada.'
+    };
+}
+
 router.get('/status', (req, res) => {
     return res.json({
         sucesso: true,
-        mensagem: 'Integração Riot configurada no GameMetrics.'
+        mensagem: 'Consulta de dados Riot disponível.',
+        verificacaoAutomatica: false
     });
 });
 
-// Consulta uma conta Riot
+// Consulta pública de dados da conta.
+// Consultar não significa comprovar propriedade.
 router.get('/conta/:nome/:tag', async (req, res) => {
     try {
         const { nome, tag } = req.params;
@@ -68,7 +82,12 @@ router.get('/conta/:nome/:tag', async (req, res) => {
 
         return res.json({
             sucesso: true,
-            conta
+            conta,
+            verificacao: {
+                propriedade_verificada: false,
+                tipo: 'consulta',
+                mensagem: 'Consulta não comprova propriedade.'
+            }
         });
     } catch (erro) {
         console.error('Erro ao buscar conta Riot:', erro.message);
@@ -76,16 +95,15 @@ router.get('/conta/:nome/:tag', async (req, res) => {
     }
 });
 
-// Consulta o histórico Riot
 router.get('/historico/:puuid', async (req, res) => {
     try {
         const { puuid } = req.params;
-
         const historico = await buscarHistoricoValorant(puuid);
 
         return res.json({
             sucesso: true,
-            historico
+            historico,
+            propriedade_verificada: false
         });
     } catch (erro) {
         console.error('Erro ao buscar histórico Riot:', erro.message);
@@ -93,10 +111,19 @@ router.get('/historico/:puuid', async (req, res) => {
     }
 });
 
-// Vincula uma conta Riot
+// Mantém a rota antiga para compatibilidade com o frontend.
+// Ela registra uma consulta, NÃO verifica propriedade.
 router.post('/vincular', async (req, res) => {
     try {
+        const usuarioId = req.session?.uid;
         const { nome, tag } = req.body || {};
+
+        if (!usuarioId) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: 'Faça login no GameMetrics.'
+            });
+        }
 
         if (
             typeof nome !== 'string' ||
@@ -128,14 +155,29 @@ router.post('/vincular', async (req, res) => {
         );
 
         if (contaExistente) {
-            return res.status(409).json({
-                sucesso: false,
-                mensagem: 'Esta conta Riot já está vinculada.'
+            if (Number(contaExistente.usuario_id) !== Number(usuarioId)) {
+                return res.status(409).json({
+                    sucesso: false,
+                    mensagem:
+                        'Esta conta já está registrada em outra consulta.'
+                });
+            }
+
+            return res.json({
+                sucesso: true,
+                mensagem:
+                    'Conta já adicionada para consulta.',
+                conta: {
+                    id: contaExistente.id,
+                    game_name: contaExistente.game_name,
+                    tag_line: contaExistente.tag_line
+                },
+                verificacao: statusVerificacao(contaExistente)
             });
         }
 
         await salvarContaRiot(db, {
-            usuario_id: req.session.uid,
+            usuario_id: usuarioId,
             puuid: contaRiot.puuid,
             game_name: contaRiot.gameName,
             tag_line: contaRiot.tagLine
@@ -143,37 +185,95 @@ router.post('/vincular', async (req, res) => {
 
         return res.status(201).json({
             sucesso: true,
-            mensagem: 'Conta Riot vinculada com sucesso.'
+            mensagem:
+                'Conta adicionada para consulta. Propriedade não verificada.',
+            verificacao: statusVerificacao(null)
         });
     } catch (erro) {
-        console.error('Erro ao vincular conta Riot:', erro.message);
+        console.error('Erro ao consultar conta Riot:', erro.message);
 
         return responderErroOperacao(
             res,
             erro,
-            'Não foi possível vincular a conta Riot.'
+            'Não foi possível adicionar a conta para consulta.'
         );
     }
 });
 
-// Lista as partidas recentes da conta principal
+// Lista as contas consultadas pelo usuário do GameMetrics.
+router.get('/contas-consultadas', async (req, res) => {
+    try {
+        const usuarioId = req.session?.uid;
+
+        if (!usuarioId) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: 'Faça login no GameMetrics.'
+            });
+        }
+
+        const [contas] = await db.execute(
+            `SELECT
+                id,
+                game_name,
+                tag_line,
+                propriedade_verificada,
+                criado_em
+             FROM riot_conta
+             WHERE usuario_id = ?
+             ORDER BY id ASC`,
+            [usuarioId]
+        );
+
+        return res.json({
+            sucesso: true,
+            total: contas.length,
+            contas: contas.map(conta => ({
+                id: conta.id,
+                game_name: conta.game_name,
+                tag_line: conta.tag_line,
+                criado_em: conta.criado_em,
+                verificacao: statusVerificacao(conta)
+            }))
+        });
+    } catch (erro) {
+        console.error('Erro ao listar contas:', erro.message);
+
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: 'Não foi possível listar as contas consultadas.'
+        });
+    }
+});
+
+// Mantém temporariamente a primeira conta como referência
+// para preservar o funcionamento atual da importação.
 router.get('/partidas-recentes', async (req, res) => {
     try {
+        const usuarioId = req.session?.uid;
+
+        if (!usuarioId) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: 'Faça login no GameMetrics.'
+            });
+        }
+
         const { henrikRequest } = require('../riot/henrikClient');
 
         const [contas] = await db.execute(
-            `SELECT game_name, tag_line
+            `SELECT id, game_name, tag_line, propriedade_verificada
              FROM riot_conta
              WHERE usuario_id = ?
              ORDER BY id ASC
              LIMIT 1`,
-            [req.session.uid]
+            [usuarioId]
         );
 
         if (contas.length === 0) {
             return res.status(404).json({
                 sucesso: false,
-                mensagem: 'Vincule sua conta Riot primeiro.'
+                mensagem: 'Consulte uma conta Riot primeiro.'
             });
         }
 
@@ -198,7 +298,13 @@ router.get('/partidas-recentes', async (req, res) => {
         return res.json({
             sucesso: true,
             total: partidas.length,
-            partidas
+            partidas,
+            conta: {
+                id: conta.id,
+                game_name: conta.game_name,
+                tag_line: conta.tag_line
+            },
+            verificacao: statusVerificacao(conta)
         });
     } catch (erro) {
         console.error('Erro HenrikDev:', erro.message);
@@ -210,11 +316,17 @@ router.get('/partidas-recentes', async (req, res) => {
     }
 });
 
-// Importa partidas usando a conta principal
 router.post('/importar-partida', async (req, res) => {
     try {
-        const usuarioId = req.session.uid;
+        const usuarioId = req.session?.uid;
         const { matchId } = req.body || {};
+
+        if (!usuarioId) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: 'Faça login no GameMetrics.'
+            });
+        }
 
         if (typeof matchId !== 'string' || !matchId.trim()) {
             return res.status(400).json({
@@ -224,7 +336,7 @@ router.post('/importar-partida', async (req, res) => {
         }
 
         const [contas] = await db.execute(
-            `SELECT id, puuid
+            `SELECT id, puuid, propriedade_verificada
              FROM riot_conta
              WHERE usuario_id = ?
              ORDER BY id ASC
@@ -235,7 +347,7 @@ router.post('/importar-partida', async (req, res) => {
         if (contas.length === 0) {
             return res.status(404).json({
                 sucesso: false,
-                mensagem: 'Vincule sua conta Riot primeiro.'
+                mensagem: 'Consulte uma conta Riot primeiro.'
             });
         }
 
@@ -251,7 +363,8 @@ router.post('/importar-partida', async (req, res) => {
         return res.status(201).json({
             sucesso: true,
             mensagem: 'Partida importada com sucesso.',
-            partida
+            partida,
+            verificacao: statusVerificacao(conta)
         });
     } catch (erro) {
         console.error('Erro ao importar partida:', erro.message);
@@ -264,10 +377,16 @@ router.post('/importar-partida', async (req, res) => {
     }
 });
 
-// Lista partidas importadas
 router.get('/minhas-partidas', async (req, res) => {
     try {
-        const usuarioId = req.session.uid;
+        const usuarioId = req.session?.uid;
+
+        if (!usuarioId) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: 'Faça login no GameMetrics.'
+            });
+        }
 
         const sql = `
             SELECT
@@ -291,7 +410,8 @@ router.get('/minhas-partidas', async (req, res) => {
                 p.acs,
                 p.criado_em,
                 c.game_name,
-                c.tag_line
+                c.tag_line,
+                c.propriedade_verificada
             FROM riot_partida AS p
             INNER JOIN riot_conta AS c
                 ON p.riot_conta_id = c.id
@@ -305,7 +425,11 @@ router.get('/minhas-partidas', async (req, res) => {
         return res.json({
             sucesso: true,
             total: partidas.length,
-            partidas
+            tipo: 'partidas_consultadas',
+            partidas: partidas.map(partida => ({
+                ...partida,
+                verificacao: statusVerificacao(partida)
+            }))
         });
     } catch (erro) {
         console.error('Erro ao listar partidas Riot:', erro.message);
@@ -317,10 +441,16 @@ router.get('/minhas-partidas', async (req, res) => {
     }
 });
 
-// Estatísticas do VALORANT
 router.get('/estatisticas', async (req, res) => {
     try {
-        const usuarioId = req.session.uid;
+        const usuarioId = req.session?.uid;
+
+        if (!usuarioId) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: 'Faça login no GameMetrics.'
+            });
+        }
 
         const sql = `
             SELECT
@@ -341,11 +471,12 @@ router.get('/estatisticas', async (req, res) => {
         `;
 
         const [partidas] = await db.execute(sql, [usuarioId]);
-
         const estatisticas = calcularEstatisticasValorant(partidas);
 
         return res.json({
             sucesso: true,
+            tipo: 'estatisticas_de_contas_consultadas',
+            propriedadeConfirmada: false,
             estatisticas
         });
     } catch (erro) {
@@ -358,11 +489,17 @@ router.get('/estatisticas', async (req, res) => {
     }
 });
 
-// Detalhes e jogadores de uma partida
 router.get('/partida/:id/detalhes', async (req, res) => {
     try {
-        const usuarioId = req.session.uid;
+        const usuarioId = req.session?.uid;
         const partidaId = Number(req.params.id);
+
+        if (!usuarioId) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: 'Faça login no GameMetrics.'
+            });
+        }
 
         if (!Number.isInteger(partidaId) || partidaId <= 0) {
             return res.status(400).json({
@@ -375,7 +512,8 @@ router.get('/partida/:id/detalhes', async (req, res) => {
             `SELECT
                 p.*,
                 c.game_name,
-                c.tag_line
+                c.tag_line,
+                c.propriedade_verificada
              FROM riot_partida AS p
              INNER JOIN riot_conta AS c
                 ON p.riot_conta_id = c.id
@@ -413,6 +551,7 @@ router.get('/partida/:id/detalhes', async (req, res) => {
         return res.json({
             sucesso: true,
             partida: partidas[0],
+            verificacao: statusVerificacao(partidas[0]),
             jogadores
         });
     } catch (erro) {
