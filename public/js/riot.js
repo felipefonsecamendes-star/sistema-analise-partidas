@@ -1,8 +1,6 @@
 
- // Tela do VALORANT: conta, partidas, estatísticas e detalhes
+ // Tela do VALORANT: consultas, partidas, estatísticas e detalhes
 telas.riot = async () => {
-  const riotLoginUrl = '/api/riot/login';
-
   v.innerHTML = `
     <h2 class="tit">
       <img class="ico"
@@ -12,17 +10,23 @@ telas.riot = async () => {
     </h2>
 
     <section class="painel">
-      <h3 class="sub" style="margin-top:0">Conta Riot</h3>
-      <p>Conecte sua conta Riot Games para acessar suas estatísticas.</p>
+      <h3 class="sub" style="margin-top:0">
+        Consultar conta Riot
+      </h3>
 
-      <a class="btn" href="${riotLoginUrl}"
-        style="display:inline-block;margin-bottom:20px">
-        Conectar com Riot Games
-      </a>
+      <p>
+        Consulte estatísticas de jogadores pelo Riot ID.
+        A consulta não comprova que a conta pertence a você.
+      </p>
+
+      <p style="color:#f0b35a;font-weight:600">
+        Conta não verificada — a propriedade da conta
+        não foi confirmada pela Riot Games.
+      </p>
 
       <form id="fv" class="grid">
         <label>Nome
-          <input id="rnome" placeholder="SeuNome" required>
+          <input id="rnome" placeholder="NomeDoJogador" required>
         </label>
 
         <label>Tag
@@ -30,13 +34,15 @@ telas.riot = async () => {
         </label>
 
         <div style="align-self:end;margin-bottom:14px">
-          <button>Vincular conta</button>
+          <button>Consultar conta</button>
         </div>
       </form>
 
       <h3 class="sub">Partidas recentes</h3>
+
       <p class="rot">
-        Selecione uma partida para importar suas estatísticas.
+        Partidas da conta selecionada para consulta.
+        Os dados não representam uma conta de propriedade verificada.
       </p>
 
       <div id="rrecentes">
@@ -67,7 +73,11 @@ telas.riot = async () => {
         })
       );
 
-      aviso(resposta.mensagem, true);
+      aviso(
+        'Conta adicionada para consulta. Propriedade não verificada.',
+        true
+      );
+
       await carregarRecentes();
       await carrega();
 
@@ -76,7 +86,6 @@ telas.riot = async () => {
     }
   };
 
-  // Busca automaticamente imagens oficiais dos mapas
   let cacheMapas = null;
 
   async function buscarImagemMapa(nomeMapa) {
@@ -230,6 +239,11 @@ telas.riot = async () => {
       ];
 
       $('#dados').innerHTML = `
+        <p style="color:#f0b35a;font-weight:600">
+          Estatísticas de contas consultadas —
+          propriedade não verificada.
+        </p>
+
         <div class="cards tres">
           ${itens.map(([titulo, valor]) => `
             <div class="card">
@@ -239,7 +253,7 @@ telas.riot = async () => {
           `).join('')}
         </div>
 
-        <h3 class="sub">Últimas partidas</h3>
+        <h3 class="sub">Últimas partidas consultadas</h3>
 
         <div class="grid">
           <label>
@@ -276,7 +290,7 @@ telas.riot = async () => {
           $('#rhist').innerHTML = `
             <p class="rot">
               Nenhuma partida encontrada.
-              Vincule sua conta e importe uma partida acima.
+              Consulte uma conta e importe uma partida acima.
             </p>
           `;
           return;
@@ -381,7 +395,7 @@ telas.riot = async () => {
 
       const partida = resposta.partida;
       const jogadores = resposta.jogadores || [];
-     
+
       const nomeConta = String(partida.game_name || '')
         .trim().toLowerCase();
 
@@ -399,10 +413,8 @@ telas.riot = async () => {
       const mapa = esc(nomeMapa);
       const resultado = partida.resultado || 'Indefinido';
 
-      // Carrega a imagem correspondente ao mapa da partida
       const imagemMapa = await buscarImagemMapa(nomeMapa);
-     
-      // Busca os ícones de todos os agentes
+
       let iconesAgentes = {};
 
       try {
@@ -428,7 +440,6 @@ telas.riot = async () => {
         return iconesAgentes[String(nome || '').toLowerCase()] || '';
       };
 
-
       const equipes = [...new Set(
         jogadores.map(jogador => jogador.equipe || 'Sem equipe')
       )];
@@ -450,13 +461,10 @@ telas.riot = async () => {
             </thead>
 
             <tbody>
-             
-${lista.map(jogador => `
-                
-<tr style="${jogadorVinculado(jogador)
-  ? 'background-color:rgba(0,140,255,0.25) !important; outline:2px solid #008cff; outline-offset:-2px;'
-  : ''}">
-
+              ${lista.map(jogador => `
+                <tr style="${jogadorVinculado(jogador)
+                  ? 'background-color:rgba(0,140,255,0.25) !important; outline:2px solid #008cff; outline-offset:-2px;'
+                  : ''}">
 
                   <td>
                     <strong>
@@ -467,29 +475,30 @@ ${lista.map(jogador => `
                       : ''}
                   </td>
 
-                 
-<td>
-  <div style="
-    display:flex;
-    align-items:center;
-    gap:10px;
-  ">
-    ${obterIconeAgente(jogador.agente) ? `
-      <img
-        src="${esc(obterIconeAgente(jogador.agente))}"
-        alt="${esc(jogador.agente || 'Agente')}"
-        style="
-          width:36px;
-          height:36px;
-          object-fit:contain;
-          border-radius:6px;
-        "
-      >
-    ` : ''}
+                  <td>
+                    <div style="
+                      display:flex;
+                      align-items:center;
+                      gap:10px;
+                    ">
+                      ${obterIconeAgente(jogador.agente) ? `
+                        <img
+                          src="${esc(obterIconeAgente(jogador.agente))}"
+                          alt="${esc(jogador.agente || 'Agente')}"
+                          style="
+                            width:36px;
+                            height:36px;
+                            object-fit:contain;
+                            border-radius:6px;
+                          "
+                        >
+                      ` : ''}
 
-    <span>${esc(jogador.agente || '-')}</span>
-  </div>
-</td>
+                      <span>
+                        ${esc(jogador.agente || '-')}
+                      </span>
+                    </div>
+                  </td>
 
                   <td>${n(jogador.kills)}</td>
                   <td>${n(jogador.deaths)}</td>
@@ -516,6 +525,10 @@ ${lista.map(jogador => `
         <section class="painel"
           style="margin-top:16px;overflow:hidden">
 
+          <p style="color:#f0b35a;font-weight:600">
+            Conta consultada — propriedade não verificada.
+          </p>
+
           ${imagemMapa ? `
             <img
               src="${esc(imagemMapa)}"
@@ -534,7 +547,7 @@ ${lista.map(jogador => `
           ` : ''}
 
           <h2 class="tit">${mapa}</h2>
-          
+
           ${partida.placar_blue != null &&
             partida.placar_red != null ? `
             <div style="
@@ -565,7 +578,6 @@ ${lista.map(jogador => `
               Placar indisponível para esta partida.
             </p>
           `}
-
 
           <div style="margin:14px 0">
             ${badge(resultado)}
