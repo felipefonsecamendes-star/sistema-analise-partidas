@@ -69,6 +69,8 @@ function processarPartidaValorant(dadosPartida, puuid, riotContaId) {
 
     const placar_blue = obterPlacarEquipe('blue');
     const placar_red = obterPlacarEquipe('red');
+    console.log('PLACAR RECEBIDO DA API:', JSON.stringify(equipes, null, 2));
+    console.log('PLACAR PROCESSADO:', { placar_blue, placar_red });
 
 
     const dadosEquipe = Array.isArray(equipes)
