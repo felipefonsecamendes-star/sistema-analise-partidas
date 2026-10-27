@@ -230,7 +230,7 @@ router.post('/importar-partida', async (req, res) => {
     `SELECT id, puuid
      FROM riot_conta
      WHERE usuario_id = ?
-     ORDER BY id DESC
+     ORDER BY id ASC
      LIMIT 1`,
     [usuarioId]
 );
