@@ -127,8 +127,62 @@ async function salvarPartidaRiot(conexao, partida) {
     return resultado;
 }
 
+async function salvarJogadoresPartida(conexao, partidaId, jogadores) {
+    if (!conexao || !partidaId || !Array.isArray(jogadores)) {
+        throw new Error('Dados dos jogadores não informados.');
+    }
+
+    for (const jogador of jogadores) {
+        if (!jogador.puuid) continue;
+
+        const sql = `
+            INSERT INTO riot_partida_jogador (
+                partida_id, puuid, nick, tag, equipe, agente,
+                kills, deaths, assists, headshots, bodyshots,
+                legshots, hs_percentual, adr, acs
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+                nick = VALUES(nick),
+                tag = VALUES(tag),
+                equipe = VALUES(equipe),
+                agente = VALUES(agente),
+                kills = VALUES(kills),
+                deaths = VALUES(deaths),
+                assists = VALUES(assists),
+                headshots = VALUES(headshots),
+                bodyshots = VALUES(bodyshots),
+                legshots = VALUES(legshots),
+                hs_percentual = VALUES(hs_percentual),
+                adr = VALUES(adr),
+                acs = VALUES(acs)
+        `;
+
+        const valores = [
+            partidaId,
+            jogador.puuid,
+            jogador.nick ?? null,
+            jogador.tag ?? null,
+            jogador.equipe ?? null,
+            jogador.agente ?? null,
+            jogador.kills ?? 0,
+            jogador.deaths ?? 0,
+            jogador.assists ?? 0,
+            jogador.headshots ?? 0,
+            jogador.bodyshots ?? 0,
+            jogador.legshots ?? 0,
+            jogador.hs_percentual ?? 0,
+            jogador.adr ?? 0,
+            jogador.acs ?? 0
+        ];
+
+        await conexao.execute(sql, valores);
+    }
+}
+
 module.exports = {
     buscarContaRiot,
     salvarContaRiot,
-    salvarPartidaRiot
+    salvarPartidaRiot,
+    salvarJogadoresPartida
 };
