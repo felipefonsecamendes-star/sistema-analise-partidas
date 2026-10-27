@@ -466,6 +466,38 @@ telas.riot = async () => {
           ` : ''}
 
           <h2 class="tit">${mapa}</h2>
+          
+          ${partida.placar_blue != null &&
+            partida.placar_red != null ? `
+            <div style="
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              gap:30px;
+              margin:24px 0;
+              font-size:28px;
+              font-weight:bold;
+            ">
+              <span style="color:#58a6ff">
+                BLUE
+              </span>
+
+              <span style="font-size:38px;color:#fff">
+                ${Number(partida.placar_blue)}
+                ×
+                ${Number(partida.placar_red)}
+              </span>
+
+              <span style="color:#ff5865">
+                RED
+              </span>
+            </div>
+          ` : `
+            <p class="rot">
+              Placar indisponível para esta partida.
+            </p>
+          `}
+
 
           <div style="margin:14px 0">
             ${badge(resultado)}
