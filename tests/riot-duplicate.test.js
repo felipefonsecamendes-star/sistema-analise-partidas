@@ -83,12 +83,28 @@ test('insere uma partida nova corretamente', async () => {
                 1,
                 'MATCH-789',
                 20,
-                10,
-                5,
-                'Ascent',
-                'Vitória',
-                250
-            ]);
+                
+assert.deepEqual(valores, [
+    1,
+    'MATCH-789',
+    20,
+    10,
+    5,
+    'Ascent',
+    'Vitória',
+    250,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+]);
+
 
             return [{ insertId: 15, affectedRows: 1 }];
         }
