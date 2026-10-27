@@ -452,9 +452,11 @@ telas.riot = async () => {
             <tbody>
              
 ${lista.map(jogador => `
-                <tr style="${jogadorVinculado(jogador)
-                  ? 'background:rgba(88,166,255,0.18);'
-                  : ''}">
+                
+<tr style="${jogadorVinculado(jogador)
+  ? 'background-color:rgba(0,140,255,0.25) !important; outline:2px solid #008cff; outline-offset:-2px;'
+  : ''}">
+
 
                   <td>
                     <strong>
