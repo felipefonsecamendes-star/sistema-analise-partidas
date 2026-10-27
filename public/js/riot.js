@@ -381,6 +381,18 @@ telas.riot = async () => {
 
       const partida = resposta.partida;
       const jogadores = resposta.jogadores || [];
+     
+      const nomeConta = String(partida.game_name || '')
+        .trim().toLowerCase();
+
+      const tagConta = String(partida.tag_line || '')
+        .trim().replace(/^#/, '').toLowerCase();
+
+      const jogadorVinculado = jogador =>
+        Boolean(nomeConta && tagConta) &&
+        String(jogador.nick || '').trim().toLowerCase() === nomeConta &&
+        String(jogador.tag || '').trim().replace(/^#/, '').toLowerCase() === tagConta;
+
       const n = valor => Number(valor) || 0;
 
       const nomeMapa = String(partida.mapa || 'Desconhecido');
@@ -438,8 +450,12 @@ telas.riot = async () => {
             </thead>
 
             <tbody>
-              ${lista.map(jogador => `
-                <tr>
+             
+${lista.map(jogador => `
+                <tr style="${jogadorVinculado(jogador)
+                  ? 'background:rgba(88,166,255,0.18);'
+                  : ''}">
+
                   <td>
                     <strong>
                       ${esc(jogador.nick || 'Desconhecido')}
