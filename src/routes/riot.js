@@ -382,4 +382,64 @@ router.get('/estatisticas', async (req, res) => {
 });
 
 // Exporta todas as rotas Riot
+
+ // Retorna os detalhes e jogadores de uma partida
+router.get('/partida/:id/detalhes', async (req, res) => {
+    try {
+        const usuarioId = req.session.uid;
+        const partidaId = Number(req.params.id);
+
+        if (!Number.isInteger(partidaId) || partidaId <= 0) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: 'ID da partida inválido.'
+            });
+        }
+
+        const [partidas] = await db.execute(
+            `SELECT p.*
+             FROM riot_partida AS p
+             INNER JOIN riot_conta AS c
+                ON p.riot_conta_id = c.id
+             WHERE p.id = ?
+               AND c.usuario_id = ?
+             LIMIT 1`,
+            [partidaId, usuarioId]
+        );
+
+        if (partidas.length === 0) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: 'Partida não encontrada.'
+            });
+        }
+
+        const [jogadores] = await db.execute(
+            `SELECT nick, tag, equipe, agente,
+                    kills, deaths, assists,
+                    hs_percentual, adr, acs
+             FROM riot_partida_jogador
+             WHERE partida_id = ?
+             ORDER BY equipe, kills DESC`,
+            [partidaId]
+        );
+
+        return res.json({
+            sucesso: true,
+            partida: partidas[0],
+            jogadores
+        });
+    } catch (erro) {
+        console.error(
+            'Erro ao buscar detalhes da partida:',
+            erro.message
+        );
+
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: 'Não foi possível carregar os detalhes.'
+        });
+    }
+});
+
 module.exports = router;
