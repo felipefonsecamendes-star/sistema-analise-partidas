@@ -80,6 +80,8 @@ async function salvarPartidaRiot(conexao, partida) {
             assists,
             mapa,
             resultado,
+            placar_blue,
+            placar_red,
             pontuacao,
             headshots,
             bodyshots,
@@ -92,9 +94,9 @@ async function salvarPartidaRiot(conexao, partida) {
             adr,
             acs
         )
-        VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?, ?,
-            ?, ?, ?, ?, ?, ?, ?, ?, ?
+         VALUES (
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
     `;
 
@@ -106,6 +108,8 @@ async function salvarPartidaRiot(conexao, partida) {
         partida.assists ?? 0,
         partida.mapa ?? null,
         partida.resultado ?? null,
+        partida.placar_blue ?? null,
+        partida.placar_red ?? null,
         partida.pontuacao ?? 0,
         partida.headshots ?? 0,
         partida.bodyshots ?? 0,
