@@ -9,8 +9,13 @@ const {
 } = require('./processor');
 
 const {
-    salvarPartidaRiot
+    salvarPartidaRiot,
+    salvarJogadoresPartida
 } = require('./repository');
+
+const {
+    processarJogadoresPartida
+} = require('./players');
 
 // Verifica se uma partida já está cadastrada
 async function verificarPartidaExistente(
@@ -94,7 +99,15 @@ async function importarPartidaValorant(
 
     // Salva as estatísticas no MySQL
     try {
-        await salvarPartidaRiot(conexao, partida);
+        const resultado = await salvarPartidaRiot(conexao, partida);
+
+const jogadores = processarJogadoresPartida(dadosPartida);
+
+await salvarJogadoresPartida(
+    conexao,
+    resultado.insertId,
+    jogadores
+);
     } catch (erro) {
         // Protege contra importações simultâneas
         if (
