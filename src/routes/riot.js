@@ -1,13 +1,11 @@
 
 const express = require('express');
 const router = express.Router();
+
 const {
     iniciarLoginRiot,
     receberCallbackRiot
 } = require('../riot/oauth');
-
-router.get('/login', iniciarLoginRiot);
-router.get('/callback', receberCallbackRiot);
 
 const db = require('../db');
 
@@ -33,7 +31,10 @@ const {
     responderErroRiot
 } = require('../riot/error');
 
-// Trata erros de operações que usam a API Riot e o banco
+router.get('/login', iniciarLoginRiot);
+router.get('/callback', receberCallbackRiot);
+
+// Trata erros das operações Riot
 function responderErroOperacao(res, erro, mensagem) {
     if (
         erro &&
@@ -50,7 +51,7 @@ function responderErroOperacao(res, erro, mensagem) {
     });
 }
 
-// Verifica se a integração Riot está disponível
+// Status da integração
 router.get('/status', (req, res) => {
     return res.json({
         sucesso: true,
@@ -58,7 +59,7 @@ router.get('/status', (req, res) => {
     });
 });
 
-// Consulta uma conta Riot pelo nome e tag
+// Consulta uma conta Riot
 router.get('/conta/:nome/:tag', async (req, res) => {
     try {
         const { nome, tag } = req.params;
@@ -71,12 +72,11 @@ router.get('/conta/:nome/:tag', async (req, res) => {
         });
     } catch (erro) {
         console.error('Erro ao buscar conta Riot:', erro.message);
-
         return responderErroRiot(res, erro);
     }
 });
 
-// Consulta o histórico de partidas do VALORANT
+// Consulta o histórico Riot
 router.get('/historico/:puuid', async (req, res) => {
     try {
         const { puuid } = req.params;
@@ -89,12 +89,11 @@ router.get('/historico/:puuid', async (req, res) => {
         });
     } catch (erro) {
         console.error('Erro ao buscar histórico Riot:', erro.message);
-
         return responderErroRiot(res, erro);
     }
 });
 
-// Vincula uma conta Riot ao usuário logado
+// Vincula uma conta Riot
 router.post('/vincular', async (req, res) => {
     try {
         const { nome, tag } = req.body || {};
@@ -157,8 +156,7 @@ router.post('/vincular', async (req, res) => {
     }
 });
 
- // Lista as partidas recentes da conta Riot vinculada
-
+// Lista as partidas recentes da conta principal
 router.get('/partidas-recentes', async (req, res) => {
     try {
         const { henrikRequest } = require('../riot/henrikClient');
@@ -167,6 +165,7 @@ router.get('/partidas-recentes', async (req, res) => {
             `SELECT game_name, tag_line
              FROM riot_conta
              WHERE usuario_id = ?
+             ORDER BY id ASC
              LIMIT 1`,
             [req.session.uid]
         );
@@ -201,7 +200,6 @@ router.get('/partidas-recentes', async (req, res) => {
             total: partidas.length,
             partidas
         });
-
     } catch (erro) {
         console.error('Erro HenrikDev:', erro.message);
 
@@ -212,8 +210,7 @@ router.get('/partidas-recentes', async (req, res) => {
     }
 });
 
-     
-// Importa uma partida do VALORANT
+// Importa partidas usando a conta principal
 router.post('/importar-partida', async (req, res) => {
     try {
         const usuarioId = req.session.uid;
@@ -227,13 +224,13 @@ router.post('/importar-partida', async (req, res) => {
         }
 
         const [contas] = await db.execute(
-    `SELECT id, puuid
-     FROM riot_conta
-     WHERE usuario_id = ?
-     ORDER BY id ASC
-     LIMIT 1`,
-    [usuarioId]
-);
+            `SELECT id, puuid
+             FROM riot_conta
+             WHERE usuario_id = ?
+             ORDER BY id ASC
+             LIMIT 1`,
+            [usuarioId]
+        );
 
         if (contas.length === 0) {
             return res.status(404).json({
@@ -256,22 +253,18 @@ router.post('/importar-partida', async (req, res) => {
             mensagem: 'Partida importada com sucesso.',
             partida
         });
-    
+    } catch (erro) {
+        console.error('Erro ao importar partida:', erro.message);
 
-} catch (erro) {
-    console.error('Erro ao importar partida:', erro.message);
-
-    return responderErroOperacao(
-        res,
-        erro,
-        'Não foi possível importar a partida.'
-    );
-}
+        return responderErroOperacao(
+            res,
+            erro,
+            'Não foi possível importar a partida.'
+        );
+    }
 });
 
-
-
- // Lista as partidas importadas do usuário logado
+// Lista partidas importadas
 router.get('/minhas-partidas', async (req, res) => {
     try {
         const usuarioId = req.session.uid;
@@ -307,10 +300,7 @@ router.get('/minhas-partidas', async (req, res) => {
             LIMIT 50
         `;
 
-        const [partidas] = await db.execute(
-            sql,
-            [usuarioId]
-        );
+        const [partidas] = await db.execute(sql, [usuarioId]);
 
         return res.json({
             sucesso: true,
@@ -318,10 +308,7 @@ router.get('/minhas-partidas', async (req, res) => {
             partidas
         });
     } catch (erro) {
-        console.error(
-            'Erro ao listar partidas Riot:',
-            erro.message
-        );
+        console.error('Erro ao listar partidas Riot:', erro.message);
 
         return res.status(500).json({
             sucesso: false,
@@ -330,9 +317,7 @@ router.get('/minhas-partidas', async (req, res) => {
     }
 });
 
-
-
- // Retorna as estatísticas do VALORANT do usuário logado
+// Estatísticas do VALORANT
 router.get('/estatisticas', async (req, res) => {
     try {
         const usuarioId = req.session.uid;
@@ -355,24 +340,16 @@ router.get('/estatisticas', async (req, res) => {
             WHERE c.usuario_id = ?
         `;
 
-        const [partidas] = await db.execute(
-            sql,
-            [usuarioId]
-        );
+        const [partidas] = await db.execute(sql, [usuarioId]);
 
-        const estatisticas = calcularEstatisticasValorant(
-            partidas
-        );
+        const estatisticas = calcularEstatisticasValorant(partidas);
 
         return res.json({
             sucesso: true,
             estatisticas
         });
     } catch (erro) {
-        console.error(
-            'Erro ao calcular estatísticas Riot:',
-            erro.message
-        );
+        console.error('Erro ao calcular estatísticas Riot:', erro.message);
 
         return res.status(500).json({
             sucesso: false,
@@ -381,9 +358,7 @@ router.get('/estatisticas', async (req, res) => {
     }
 });
 
-// Exporta todas as rotas Riot
-
- // Retorna os detalhes e jogadores de uma partida
+// Detalhes e jogadores de uma partida
 router.get('/partida/:id/detalhes', async (req, res) => {
     try {
         const usuarioId = req.session.uid;
@@ -398,11 +373,11 @@ router.get('/partida/:id/detalhes', async (req, res) => {
 
         const [partidas] = await db.execute(
             `SELECT
-    p.*,
-    c.game_name,
-    c.tag_line
- FROM riot_partida AS p
- INNER JOIN riot_conta AS c
+                p.*,
+                c.game_name,
+                c.tag_line
+             FROM riot_partida AS p
+             INNER JOIN riot_conta AS c
                 ON p.riot_conta_id = c.id
              WHERE p.id = ?
                AND c.usuario_id = ?
@@ -418,9 +393,17 @@ router.get('/partida/:id/detalhes', async (req, res) => {
         }
 
         const [jogadores] = await db.execute(
-            `SELECT nick, tag, equipe, agente,
-                    kills, deaths, assists,
-                    hs_percentual, adr, acs
+            `SELECT
+                nick,
+                tag,
+                equipe,
+                agente,
+                kills,
+                deaths,
+                assists,
+                hs_percentual,
+                adr,
+                acs
              FROM riot_partida_jogador
              WHERE partida_id = ?
              ORDER BY equipe, kills DESC`,
