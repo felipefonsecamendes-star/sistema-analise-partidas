@@ -271,7 +271,7 @@ router.post('/importar-partida', async (req, res) => {
 
 
 
-// Lista as partidas importadas do usuário logado
+ // Lista as partidas importadas do usuário logado
 router.get('/minhas-partidas', async (req, res) => {
     try {
         const usuarioId = req.session.uid;
@@ -286,6 +286,16 @@ router.get('/minhas-partidas', async (req, res) => {
                 p.mapa,
                 p.resultado,
                 p.pontuacao,
+                p.headshots,
+                p.bodyshots,
+                p.legshots,
+                p.dano_total,
+                p.rodadas_jogadas,
+                p.hs_percentual,
+                p.kd,
+                p.kda,
+                p.adr,
+                p.acs,
                 p.criado_em,
                 c.game_name,
                 c.tag_line
@@ -319,6 +329,7 @@ router.get('/minhas-partidas', async (req, res) => {
         });
     }
 });
+
 
 // Retorna as estatísticas do VALORANT do usuário logado
 router.get('/estatisticas', async (req, res) => {
