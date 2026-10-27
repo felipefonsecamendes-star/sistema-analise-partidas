@@ -11,6 +11,7 @@ async function buscarContaRiot(conexao, puuid) {
             puuid,
             game_name,
             tag_line,
+            propriedade_verificada,
             criado_em
         FROM riot_conta
         WHERE puuid = ?
@@ -39,9 +40,10 @@ async function salvarContaRiot(conexao, conta) {
             usuario_id,
             puuid,
             game_name,
-            tag_line
+            tag_line,
+            propriedade_verificada
         )
-        VALUES (?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, FALSE)
         ON DUPLICATE KEY UPDATE
             game_name = VALUES(game_name),
             tag_line = VALUES(tag_line)
@@ -54,7 +56,10 @@ async function salvarContaRiot(conexao, conta) {
         conta.tag_line ?? null
     ];
 
-    const [resultado] = await conexao.execute(sql, valores);
+    const [resultado] = await conexao.execute(
+        sql,
+        valores
+    );
 
     return resultado;
 }
@@ -94,7 +99,7 @@ async function salvarPartidaRiot(conexao, partida) {
             adr,
             acs
         )
-         VALUES (
+        VALUES (
             ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
             ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
@@ -141,11 +146,26 @@ async function salvarJogadoresPartida(conexao, partidaId, jogadores) {
 
         const sql = `
             INSERT INTO riot_partida_jogador (
-                partida_id, puuid, nick, tag, equipe, agente,
-                kills, deaths, assists, headshots, bodyshots,
-                legshots, hs_percentual, adr, acs
+                partida_id,
+                puuid,
+                nick,
+                tag,
+                equipe,
+                agente,
+                kills,
+                deaths,
+                assists,
+                headshots,
+                bodyshots,
+                legshots,
+                hs_percentual,
+                adr,
+                acs
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?
+            )
             ON DUPLICATE KEY UPDATE
                 nick = VALUES(nick),
                 tag = VALUES(tag),
