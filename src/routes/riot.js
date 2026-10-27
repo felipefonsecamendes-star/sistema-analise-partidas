@@ -397,9 +397,12 @@ router.get('/partida/:id/detalhes', async (req, res) => {
         }
 
         const [partidas] = await db.execute(
-            `SELECT p.*
-             FROM riot_partida AS p
-             INNER JOIN riot_conta AS c
+            `SELECT
+    p.*,
+    c.game_name,
+    c.tag_line
+ FROM riot_partida AS p
+ INNER JOIN riot_conta AS c
                 ON p.riot_conta_id = c.id
              WHERE p.id = ?
                AND c.usuario_id = ?
