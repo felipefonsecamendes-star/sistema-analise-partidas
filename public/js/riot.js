@@ -599,6 +599,7 @@ telas.riot = async () => {
             <thead>
               <tr>
                 <th>Jogador</th>
+                <th>Rank</th>
                 <th>Agente</th>
                 <th>K</th>
                 <th>D</th>
@@ -627,6 +628,19 @@ telas.riot = async () => {
                     ${jogadorConsultado(jogador)
                       ? '<small style="display:block;color:#58a6ff">Jogador consultado</small>'
                       : ''}
+                  </td>
+
+                  <td>
+                    <span style="
+                      display:inline-block;
+                      padding:5px 9px;
+                      border-radius:6px;
+                      background:rgba(255,255,255,0.08);
+                      font-weight:600;
+                      white-space:nowrap;
+                    ">
+                      ${esc(jogador.rank || 'Não disponível')}
+                    </span>
                   </td>
 
                   <td>
