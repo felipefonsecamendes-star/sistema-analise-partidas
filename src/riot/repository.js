@@ -56,10 +56,7 @@ async function salvarContaRiot(conexao, conta) {
         conta.tag_line ?? null
     ];
 
-    const [resultado] = await conexao.execute(
-        sql,
-        valores
-    );
+    const [resultado] = await conexao.execute(sql, valores);
 
     return resultado;
 }
@@ -128,10 +125,7 @@ async function salvarPartidaRiot(conexao, partida) {
         partida.acs ?? 0
     ];
 
-    const [resultado] = await conexao.execute(
-        sql,
-        valores
-    );
+    const [resultado] = await conexao.execute(sql, valores);
 
     return resultado;
 }
@@ -152,6 +146,7 @@ async function salvarJogadoresPartida(conexao, partidaId, jogadores) {
                 tag,
                 equipe,
                 agente,
+                \`rank\`,
                 kills,
                 deaths,
                 assists,
@@ -163,14 +158,15 @@ async function salvarJogadoresPartida(conexao, partidaId, jogadores) {
                 acs
             )
             VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?
             )
             ON DUPLICATE KEY UPDATE
                 nick = VALUES(nick),
                 tag = VALUES(tag),
                 equipe = VALUES(equipe),
                 agente = VALUES(agente),
+                \`rank\` = VALUES(\`rank\`),
                 kills = VALUES(kills),
                 deaths = VALUES(deaths),
                 assists = VALUES(assists),
@@ -189,6 +185,7 @@ async function salvarJogadoresPartida(conexao, partidaId, jogadores) {
             jogador.tag ?? null,
             jogador.equipe ?? null,
             jogador.agente ?? null,
+            jogador.rank ?? null,
             jogador.kills ?? 0,
             jogador.deaths ?? 0,
             jogador.assists ?? 0,
