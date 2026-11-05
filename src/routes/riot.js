@@ -584,6 +584,7 @@ router.get(
                     tag,
                     equipe,
                     agente,
+                    \`rank\`,
                     kills,
                     deaths,
                     assists,
