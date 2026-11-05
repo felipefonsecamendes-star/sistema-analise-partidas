@@ -35,13 +35,10 @@ function processarJogadoresPartida(dadosPartida) {
 
         const pontuacao = Number(stats.score) || 0;
 
-        // Rank informado nos dados da partida, quando disponível.
         const rank = typeof jogador.currenttier_patched === 'string'
-            && jogador.currenttier_patched.trim()
-            ? jogador.currenttier_patched.trim()
+            ? jogador.currenttier_patched
             : typeof jogador.rank === 'string'
-                && jogador.rank.trim()
-                ? jogador.rank.trim()
+                ? jogador.rank
                 : null;
 
         return {
