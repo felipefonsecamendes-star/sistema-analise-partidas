@@ -35,12 +35,19 @@ function processarJogadoresPartida(dadosPartida) {
 
         const pontuacao = Number(stats.score) || 0;
 
+        const rank = typeof jogador.currenttier_patched === 'string'
+            ? jogador.currenttier_patched
+            : typeof jogador.rank === 'string'
+                ? jogador.rank
+                : null;
+
         return {
             puuid: jogador.puuid || null,
             nick: jogador.name || jogador.gameName || null,
             tag: jogador.tag || jogador.tagLine || null,
             equipe: jogador.teamId || jogador.team || null,
             agente: jogador.character || jogador.agent?.name || null,
+            rank,
             kills,
             deaths,
             assists,
