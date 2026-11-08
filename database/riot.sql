@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS riot_conta (
     game_name VARCHAR(100),
     tag_line VARCHAR(10),
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    propriedade_verificada TINYINT(1) NOT NULL DEFAULT 0,
 
     -- Relacionamento com usuário do GameMetrics
     CONSTRAINT fk_riot_usuario
