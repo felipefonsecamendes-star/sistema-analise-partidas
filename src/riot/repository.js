@@ -56,10 +56,7 @@ async function salvarContaRiot(conexao, conta) {
         conta.tag_line ?? null
     ];
 
-    const [resultado] = await conexao.execute(
-        sql,
-        valores
-    );
+    const [resultado] = await conexao.execute(sql, valores);
 
     return resultado;
 }
@@ -128,10 +125,7 @@ async function salvarPartidaRiot(conexao, partida) {
         partida.acs ?? 0
     ];
 
-    const [resultado] = await conexao.execute(
-        sql,
-        valores
-    );
+    const [resultado] = await conexao.execute(sql, valores);
 
     return resultado;
 }
