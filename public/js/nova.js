@@ -11,7 +11,7 @@ telas.nova = async () => {
       : jogos[0] ? 'cs2' : null
   );
 
-  v.innerHTML = `<h2 class="tit">Nova partida</h2><form id="fm"><label class="drop">Demo do CS2 (.dem, opcional) - preenche tudo sozinho<input id="demo" type="file" accept=".dem"></label><div id="jogs"></div><div id="prev" class="cards"></div><div class="grid">
+  v.innerHTML = `<h2 class="tit">CS2</h2><form id="fm"><label class="drop">Demo do CS2 (.dem, opcional) - preenche tudo sozinho<input id="demo" type="file" accept=".dem"></label><div id="jogs"></div><div id="prev" class="cards"></div><div class="grid">
     <div style="grid-column:1/-1"><label>Jogo</label><div class="jogos">${jogos.map((j, i) => `<button type="button" class="jogo ${i ? '' : 'on'} ${/valorant/i.test(j.nome) ? 'val' : 'cs'}" data-id="${j.id_jogo}" data-nome="${esc(j.nome)}"><img src="${IMG(j.nome)}" alt=""><b>${esc(j.nome)}</b><small>${/valorant/i.test(j.nome) ? 'Cadastro manual' : 'Aceita demo (.dem)'}</small></button>`).join('')}</div><input type="hidden" id="id_jogo" value="${jogos[0] ? jogos[0].id_jogo : ''}"></div>
     <label>Resultado<select id="resultado"><option>Vitória</option><option>Derrota</option><option>Empate</option></select></label>
     ${CAMPOS.map(([id, l, t = 'number']) => `<label>${l}<input id="${id}" type="${t}" ${t === 'number' ? 'min="0" step="any"' : ''}></label>`).join('')}
