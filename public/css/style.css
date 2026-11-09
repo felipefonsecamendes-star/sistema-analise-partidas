@@ -49,3 +49,32 @@ body.auth{display:grid;grid-template-columns:1.25fr 1fr;min-height:100vh}
 @media(max-width:900px){.resumo{grid-template-columns:repeat(3,1fr)}.destaque{grid-column:1/-1}.resumo>div{border-top:1px solid var(--linha)}}
 @media(max-width:760px){body.app{grid-template-columns:1fr}.lateral{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px 0}.lateral .marca{padding:0 16px}.lateral nav{flex-direction:row;flex-wrap:wrap}.lateral button{width:auto;padding:9px 12px;border-left:0;border-bottom:3px solid transparent}.lateral button.on{border-bottom-color:var(--azul)}.lateral .sair{margin:0 0 0 auto}main#view{padding:22px 16px}.jogos{grid-template-columns:1fr}
 body.auth{grid-template-columns:1fr}.capa{padding:28px 20px;border-right:0}}
+
+/* =====================================
+   GAMEMETRICS - TEMAS DINAMICOS
+   ===================================== */
+
+/* VALORANT - VERMELHO */
+body.app[data-tema="valorant"] {
+    --azul: #FF4655;
+    --azul2: #FF7984;
+    --rubro: #FF4655;
+}
+
+/* CS2 - LARANJA/DOURADO */
+body.app[data-tema="cs2"] {
+    --azul: #DE9B35;
+    --azul2: #F2BD67;
+    --ouro: #DE9B35;
+}
+
+/* EFEITO HOVER - VALORANT */
+body.app[data-tema="valorant"] button:not(.sec):not(.red):not(.jogo):hover {
+    background: #D93646;
+}
+
+/* EFEITO HOVER - CS2 */
+body.app[data-tema="cs2"] button:not(.sec):not(.red):not(.jogo):hover {
+    background: #B77A21;
+}
+
