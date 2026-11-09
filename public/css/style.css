@@ -226,3 +226,12 @@ body.app[data-tema="valorant"] .card:has(small:first-child) {
 body.app[data-tema="valorant"] .card:has(small) {
     /* Estilo padrao */
 }
+
+/* VALORANT - CORES DOS RESULTADOS */
+body.app[data-tema="valorant"] .badge.v {
+    color: #6EA8FF;
+}
+
+body.app[data-tema="valorant"] .badge.d {
+    color: #FF4655;
+}
