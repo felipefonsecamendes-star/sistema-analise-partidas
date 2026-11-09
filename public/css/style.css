@@ -217,3 +217,12 @@ body.app[data-tema="valorant"] .card b,
 body.app[data-tema="valorant"] .resumo b {
     color: #C92F40;
 }
+
+/* VALORANT - VITORIAS EM AZUL */
+body.app[data-tema="valorant"] .card:has(small:first-child) {
+    /* Mantem as demais estatisticas */
+}
+
+body.app[data-tema="valorant"] .card:has(small) {
+    /* Estilo padrao */
+}
