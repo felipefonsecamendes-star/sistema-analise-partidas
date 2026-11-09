@@ -165,3 +165,49 @@ body.app[data-tema] .ok {
 body.app[data-tema] th {
     color: var(--azul2);
 }
+
+
+/* MENU LATERAL - CORES APENAS NA ABA ATIVA */
+
+/* Mantem o menu escuro */
+body.app[data-tema] .lateral {
+    background: #0a0f1b;
+}
+
+/* Todos os botoes do menu */
+body.app[data-tema] .lateral button {
+    background: transparent !important;
+    color: #8b97ad;
+    border-left-color: transparent;
+}
+
+/* Botao selecionado */
+body.app[data-tema] .lateral nav button.on {
+    background: #111a2d !important;
+    color: #e7ebf3;
+}
+
+/* CS2 selecionado */
+body.app[data-tema="cs2"] .lateral nav button.on {
+    border-left-color: #DE9B35;
+    color: #DE9B35;
+}
+
+/* Valorant selecionado */
+body.app[data-tema="valorant"] .lateral nav button.on {
+    border-left-color: #FF4655;
+    color: #FF4655;
+}
+
+/* Botao sair */
+body.app[data-tema] .lateral .sair {
+    background: transparent !important;
+    color: #8b97ad;
+}
+
+@media (max-width: 760px) {
+    body.app[data-tema] .lateral nav button.on {
+        border-left-color: transparent;
+        border-bottom-color: var(--cor-tema);
+    }
+}
