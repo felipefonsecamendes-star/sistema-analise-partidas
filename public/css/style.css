@@ -235,3 +235,60 @@ body.app[data-tema="valorant"] .badge.v {
 body.app[data-tema="valorant"] .badge.d {
     color: #FF4655;
 }
+
+/* CS2 - TEMA ESCURO E DOURADO */
+
+body.app[data-tema="cs2"] {
+    --fundo: #0c1220;
+    --lateral: #0a0f1b;
+    --painel: #111a2d;
+    --linha: #293449;
+    --azul: #DE9B35;
+    --azul2: #F2BD67;
+    --cor-tema: #DE9B35;
+}
+
+/* PAINEIS ESCUROS */
+body.app[data-tema="cs2"] .painel,
+body.app[data-tema="cs2"] .card,
+body.app[data-tema="cs2"] .resumo {
+    background: #111a2d;
+}
+
+/* NUMEROS BRANCOS */
+body.app[data-tema="cs2"] .card b,
+body.app[data-tema="cs2"] .resumo b {
+    color: #E7EBF3;
+}
+
+/* TITULOS DOURADOS */
+body.app[data-tema="cs2"] h2.tit {
+    color: #DE9B35;
+}
+
+/* BORDAS DISCRETAS */
+body.app[data-tema="cs2"] .card {
+    box-shadow: inset 0 2px 0 #8B672D;
+}
+
+body.app[data-tema="cs2"] .painel {
+    border: 1px solid #293449;
+    border-left: 3px solid #DE9B35;
+}
+
+/* BOTAO PRINCIPAL */
+body.app[data-tema="cs2"] button:not(.sec):not(.red):not(.jogo):not(.sair) {
+    background: #B78332;
+    color: #FFFFFF;
+}
+
+/* MENU LATERAL */
+body.app[data-tema="cs2"] .lateral {
+    background: #0a0f1b;
+}
+
+body.app[data-tema="cs2"] .lateral nav button.on {
+    background: #111a2d !important;
+    color: #DE9B35;
+    border-left-color: #DE9B35;
+}
