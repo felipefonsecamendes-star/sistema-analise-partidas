@@ -78,3 +78,90 @@ body.app[data-tema="cs2"] button:not(.sec):not(.red):not(.jogo):hover {
     background: #B77A21;
 }
 
+
+/* GAMEMETRICS - IDENTIDADE VISUAL DOS JOGOS */
+
+body.app[data-tema="valorant"] {
+    --azul: #FF4655;
+    --azul2: #FF8791;
+    --cor-tema: #FF4655;
+    --painel: #211923;
+    --lateral: #17131d;
+    --linha: #49303d;
+    --fundo: #110f17;
+    --brilho-tema: rgba(255,70,85,.14);
+}
+
+body.app[data-tema="cs2"] {
+    --azul: #DE9B35;
+    --azul2: #F2BD67;
+    --cor-tema: #DE9B35;
+    --painel: #242019;
+    --lateral: #191711;
+    --linha: #49402d;
+    --fundo: #14130f;
+    --brilho-tema: rgba(222,155,53,.14);
+}
+
+/* TITULOS E DESTAQUES */
+body.app[data-tema] h2.tit,
+body.app[data-tema] .card b,
+body.app[data-tema] .destaque b {
+    color: var(--cor-tema);
+}
+
+/* PAINEIS */
+body.app[data-tema] .painel {
+    border: 1px solid var(--linha);
+    border-left: 4px solid var(--cor-tema);
+    background: linear-gradient(
+        135deg,
+        var(--brilho-tema),
+        var(--painel) 55%
+    );
+}
+
+/* CARTOES */
+body.app[data-tema] .card {
+    background: linear-gradient(
+        145deg,
+        var(--brilho-tema),
+        var(--painel)
+    );
+    box-shadow: inset 0 3px 0 var(--cor-tema);
+}
+
+/* MENU LATERAL */
+body.app[data-tema] .lateral button.on {
+    color: var(--cor-tema);
+    border-color: var(--cor-tema);
+    background: var(--brilho-tema);
+}
+
+/* BOTOES PRINCIPAIS */
+body.app[data-tema] button:not(.sec):not(.red):not(.jogo) {
+    background: var(--cor-tema);
+    color: #fff;
+}
+
+/* CAMPOS */
+body.app[data-tema] input:focus,
+body.app[data-tema] select:focus {
+    border-color: var(--cor-tema);
+}
+
+/* SELECAO DO JOGO */
+body.app[data-tema] .jogo.on {
+    border-color: var(--cor-tema);
+    background: var(--brilho-tema);
+}
+
+/* INDICADORES E TABELAS */
+body.app[data-tema] .badge.v,
+body.app[data-tema] .ok {
+    color: var(--azul2);
+}
+
+body.app[data-tema] th {
+    color: var(--azul2);
+}
