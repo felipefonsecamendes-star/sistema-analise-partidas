@@ -4,6 +4,7 @@ telas.riot = async () => {
   let contas = [];
   let cacheMapas = null;
   let cacheAgentes = null;
+  let cacheRanks = null;
 
   const numero = valor => Number(valor) || 0;
 
@@ -14,6 +15,70 @@ telas.riot = async () => {
     conta?.verificacao?.propriedade_verificada === true
       ? 'Propriedade verificada'
       : 'Propriedade não verificada';
+
+  const normalizar = texto =>
+    String(texto || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+
+  const traduzirRank = nome => {
+    const traducoes = {
+      ferro: 'iron',
+      bronze: 'bronze',
+      prata: 'silver',
+      ouro: 'gold',
+      platina: 'platinum',
+      diamante: 'diamond',
+      ascendente: 'ascendant',
+      imortal: 'immortal',
+      radiante: 'radiant'
+    };
+
+    return normalizar(nome).replace(
+      /ferro|bronze|prata|ouro|platina|diamante|ascendente|imortal|radiante/g,
+      palavra => traducoes[palavra]
+    ).replace(/\s+/g, ' ');
+  };
+
+  async function buscarIconesRanks() {
+    if (cacheRanks) return cacheRanks;
+
+    const icones = {};
+
+    try {
+      const resposta = await fetch(
+        'https://valorant-api.com/v1/competitivetiers?language=en-US'
+      );
+
+      if (!resposta.ok) {
+        throw new Error('Ranks indisponíveis.');
+      }
+
+      const dados = await resposta.json();
+
+      const temporadas = (dados.data || [])
+        .filter(item => Array.isArray(item.tiers));
+
+      for (const temporada of temporadas) {
+        for (const tier of temporada.tiers) {
+          if (!tier.tierName || !tier.largeIcon) continue;
+
+          const nome = normalizar(tier.tierName);
+
+          if (nome && nome !== 'unused') {
+            icones[nome] = tier.largeIcon;
+          }
+        }
+      }
+    } catch (erro) {
+      console.warn('Ícones dos ranks indisponíveis:', erro);
+    }
+
+    cacheRanks = icones;
+    return icones;
+  }
 
   v.innerHTML = `
     <h2 class="tit">
@@ -157,7 +222,6 @@ telas.riot = async () => {
       );
 
       await atualizarDados();
-
     } catch (erro) {
       aviso(String(erro), false);
     }
@@ -185,17 +249,15 @@ telas.riot = async () => {
         cacheMapas = dados.data || [];
       }
 
-      const normalizar = texto =>
-        String(texto || '').trim().toLowerCase();
+      const nomeNormalizado = normalizar(nomeMapa);
 
       const mapa = cacheMapas.find(item =>
-        normalizar(item.displayName) === normalizar(nomeMapa) ||
+        normalizar(item.displayName) === nomeNormalizado ||
         normalizar(item.mapUrl?.split('/').pop()) ===
-          normalizar(nomeMapa)
+          nomeNormalizado
       );
 
       return mapa?.splash || '';
-
     } catch (erro) {
       console.warn('Imagem do mapa indisponível:', erro);
       return '';
@@ -223,7 +285,7 @@ telas.riot = async () => {
         }
       }
     } catch (erro) {
-      console.warn('Ícones indisponíveis:', erro);
+      console.warn('Ícones dos agentes indisponíveis:', erro);
     }
 
     cacheAgentes = icones;
@@ -334,17 +396,14 @@ telas.riot = async () => {
             if (String(id) === String(contaSelecionada)) {
               await carrega(id);
             }
-
           } catch (erro) {
             aviso(String(erro), false);
-
           } finally {
             botao.disabled = false;
             botao.textContent = 'Importar';
           }
         };
       });
-
     } catch (erro) {
       if (String(id) !== String(contaSelecionada)) return;
 
@@ -527,7 +586,6 @@ telas.riot = async () => {
       $('#rfm').oninput = desenha;
 
       desenha();
-
     } catch (erro) {
       if (String(id) !== String(contaSelecionada)) return;
 
@@ -579,15 +637,20 @@ telas.riot = async () => {
       const mapa = esc(nomeMapa);
       const resultado = partida.resultado || 'Indefinido';
 
-      const [imagemMapa, iconesAgentes] = await Promise.all([
-        buscarImagemMapa(nomeMapa),
-        buscarIconesAgentes()
-      ]);
+      const [imagemMapa, iconesAgentes, iconesRanks] =
+        await Promise.all([
+          buscarImagemMapa(nomeMapa),
+          buscarIconesAgentes(),
+          buscarIconesRanks()
+        ]);
 
       if (String(id) !== String(contaSelecionada)) return;
 
       const obterIconeAgente = nome =>
         iconesAgentes[String(nome || '').toLowerCase()] || '';
+
+      const obterIconeRank = nome =>
+        iconesRanks[traduzirRank(nome)] || '';
 
       const equipes = [...new Set(
         jogadores.map(jogador => jogador.equipe || 'Sem equipe')
@@ -630,17 +693,25 @@ telas.riot = async () => {
                       : ''}
                   </td>
 
-                  <td>
-                    <span style="
-                      display:inline-block;
-                      padding:5px 9px;
-                      border-radius:6px;
-                      background:rgba(255,255,255,0.08);
-                      font-weight:600;
-                      white-space:nowrap;
-                    ">
-                      ${esc(jogador.rank || 'Não disponível')}
-                    </span>
+                  <td style="text-align:center">
+                    ${obterIconeRank(jogador.rank) ? `
+                      <img
+                        src="${esc(obterIconeRank(jogador.rank))}"
+                        alt="${esc(jogador.rank)}"
+                        title="${esc(jogador.rank)}"
+                        loading="lazy"
+                        style="
+                          width:42px;
+                          height:42px;
+                          object-fit:contain;
+                          vertical-align:middle;
+                        "
+                      >
+                    ` : `
+                      <span title="${esc(jogador.rank || 'Não disponível')}">
+                        ${esc(jogador.rank || 'Não disponível')}
+                      </span>
+                    `}
                   </td>
 
                   <td>
@@ -783,7 +854,6 @@ telas.riot = async () => {
       `;
 
       $('#voltarPartidas').onclick = () => carrega(id);
-
     } catch (erro) {
       if (String(id) !== String(contaSelecionada)) return;
 
