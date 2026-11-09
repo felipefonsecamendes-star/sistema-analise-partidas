@@ -289,6 +289,44 @@ body.app[data-tema="cs2"] .lateral {
 
 body.app[data-tema="cs2"] .lateral nav button.on {
     background: #111a2d !important;
+   
+/* CS2 - AZUL PETROLEO ESCURO */
+body.app[data-tema="cs2"] {
+    --fundo: #101C2B;
+    --lateral: #0D1724;
+    --painel: #192B40;
+    --linha: #30445A;
+}
+
+/* FUNDOS DOS CARTOES */
+body.app[data-tema="cs2"] .painel,
+body.app[data-tema="cs2"] .card,
+body.app[data-tema="cs2"] .resumo,
+body.app[data-tema="cs2"] .wrap {
+    background: #192B40;
+}
+
+/* MENU LATERAL */
+body.app[data-tema="cs2"] .lateral {
+    background: #0D1724;
+}
+
+body.app[data-tema="cs2"] .lateral nav button.on {
+    background: #192B40 !important;
+}
+
+/* NUMEROS BRANCOS */
+body.app[data-tema="cs2"] .card b,
+body.app[data-tema="cs2"] .resumo b {
+    color: #F1F5FA;
+}
+
+/* BORDAS AZULADAS */
+body.app[data-tema="cs2"] .painel {
+    border-color: #30445A;
+    border-left: 3px solid #DE9B35;
+}
+
     color: #DE9B35;
     border-left-color: #DE9B35;
 }
