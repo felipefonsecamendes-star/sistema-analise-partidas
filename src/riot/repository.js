@@ -152,6 +152,7 @@ async function salvarJogadoresPartida(conexao, partidaId, jogadores) {
                 tag,
                 equipe,
                 agente,
+                \`rank\`,
                 kills,
                 deaths,
                 assists,
@@ -163,14 +164,15 @@ async function salvarJogadoresPartida(conexao, partidaId, jogadores) {
                 acs
             )
             VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?
             )
             ON DUPLICATE KEY UPDATE
                 nick = VALUES(nick),
                 tag = VALUES(tag),
                 equipe = VALUES(equipe),
                 agente = VALUES(agente),
+                \`rank\` = VALUES(\`rank\`),
                 kills = VALUES(kills),
                 deaths = VALUES(deaths),
                 assists = VALUES(assists),
@@ -189,6 +191,7 @@ async function salvarJogadoresPartida(conexao, partidaId, jogadores) {
             jogador.tag ?? null,
             jogador.equipe ?? null,
             jogador.agente ?? null,
+            jogador.rank ?? null,
             jogador.kills ?? 0,
             jogador.deaths ?? 0,
             jogador.assists ?? 0,
@@ -203,6 +206,7 @@ async function salvarJogadoresPartida(conexao, partidaId, jogadores) {
         await conexao.execute(sql, valores);
     }
 }
+
 
 module.exports = {
     buscarContaRiot,
