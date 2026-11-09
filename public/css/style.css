@@ -211,3 +211,9 @@ body.app[data-tema] .lateral .sair {
         border-bottom-color: var(--cor-tema);
     }
 }
+
+/* VALORANT - NUMEROS MAIS ESCUROS */
+body.app[data-tema="valorant"] .card b,
+body.app[data-tema="valorant"] .resumo b {
+    color: #C92F40;
+}
